@@ -1767,7 +1767,7 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
             setBody(t.body);
             setTone(t.tone);
           }}
-          onSendTest={() => alert(`Test message sent to ${userEmail}! Check your inbox for the ${tone} draft.`)}
+          onSendTest={() => alert(`Test message sent to ${session?.user?.email || "you"}! Check your inbox for the ${tone} draft.`)}
         />
       ) : null}
       {tab === "Outreach" ? <OutreachView students={students} template={{ subject, body }} programName={programName} onOpenStudent={id => setActiveStudentId(id)} /> : null}
