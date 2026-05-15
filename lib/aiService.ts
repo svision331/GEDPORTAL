@@ -45,6 +45,25 @@ async function fetchWithTimeout(url: string, options: RequestInit, timeout = 800
   }
 }
 
+function cleanLLMJson(raw: string): string {
+  // Find the first occurrence of [ or { and the last occurrence of ] or }
+  const firstBracket = Math.min(
+    raw.indexOf("[") === -1 ? Infinity : raw.indexOf("["),
+    raw.indexOf("{") === -1 ? Infinity : raw.indexOf("{")
+  );
+  const lastBracket = Math.max(
+    raw.lastIndexOf("]"),
+    raw.lastIndexOf("}")
+  );
+  
+  if (firstBracket === Infinity || lastBracket === -1 || lastBracket <= firstBracket) {
+    // If no brackets found, try the old regex method as fallback or just return trimmed
+    return raw.replace(/^```json\s*/, '').replace(/```\s*$/, '').trim();
+  }
+  
+  return raw.substring(firstBracket, lastBracket + 1).trim();
+}
+
 export async function parseRawPasteLLM(raw: string, apiKey: string): Promise<Student[]> {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
   const prompt = `You are an expert data parser. The following text is raw pasted data from a spreadsheet containing student information.
@@ -76,9 +95,7 @@ ${raw}`;
   const textOutput = data.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
   
   try {
-    // Strip markdown formatting if the LLM included it by mistake
-    const cleanJson = textOutput.replace(/^```json\s*/, '').replace(/```\s*$/, '').trim();
-    return JSON.parse(cleanJson);
+    return JSON.parse(cleanLLMJson(textOutput));
   } catch (e) {
     throw new Error("Failed to parse LLM output as JSON");
   }
@@ -120,8 +137,7 @@ ${JSON.stringify(students.map(s => ({ id: s.id, name: s.name, status: s.status, 
   const textOutput = data.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
   
   try {
-    const cleanJson = textOutput.replace(/^```json\s*/, '').replace(/```\s*$/, '').trim();
-    return JSON.parse(cleanJson);
+    return JSON.parse(cleanLLMJson(textOutput));
   } catch (e) {
     return students.map(s => {
       const isCritical = s.status === "Not Contacted";

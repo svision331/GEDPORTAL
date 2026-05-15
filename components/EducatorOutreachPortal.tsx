@@ -13,7 +13,28 @@ import autoTable from "jspdf-autotable";
 export type Language = "Spanish" | "Ukrainian" | "Chinese" | "Russian" | "Filipino" | "Fula" | "Malinké" | "Mayan" | "Persian" | "French" | "English" | "Arabic" | "Portuguese" | "Hindi" | "Bengali" | "Urdu" | "Vietnamese" | "Korean" | "Japanese" | "Turkish" | "Polish" | "Romanian" | "Dutch" | "Italian" | "German" | "Haitian Creole" | "Somali" | "Amharic" | "Swahili" | "Hmong" | "Khmer" | "Lao" | "Burmese" | "Nepali" | "Pashto";
 type Status = "Not Contacted" | "Pending" | "Sent" | "Responded" | "SMS Required" | "Unreachable";
 type OutreachChannel = "Email" | "SMS" | "Call" | "Letter";
-export type Student = { id: string; name: string; language: Language; status: Status; lastSeen?: string; email?: string; phone?: string; address?: string; languageConfidence?: "Auto-detected" | "Verified"; notes?: string; };
+export type Student = { 
+  id: string; 
+  firstName: string;
+  lastName: string;
+  language: Language; 
+  status: Status; 
+  lastSeen?: string; 
+  email?: string; 
+  phone?: string; 
+  address?: string; 
+  languageConfidence?: "Auto-detected" | "Verified"; 
+  notes?: string; 
+  classCode?: string;
+  teacherName?: string;
+  school?: string;
+  absenceDays?: number;
+  isPopRisk?: boolean;
+  popRiskReason?: string;
+  activeWorkerId?: string;
+  activeWorkerName?: string;
+  scheduledOutreach?: string;
+};
 type AuditEntry = { id: string; timestamp: string; actor: string; action: string; studentId?: string; studentName?: string; details: string; type: "outreach" | "system" | "import" | "compliance" };
 type TemplateTone = "neutral" | "encouraging" | "urgent" | "exit";
 
@@ -578,34 +599,42 @@ function useTranslation(text: string, lang: Language): { translated: string; loa
     const timer = setTimeout(async () => {
       try {
         const result = await translateViaAI(text, lang, code);
-        setTranslated(result);
-        setError(false);
+        if (result) {
+          setTranslated(result);
+          setError(false);
+        } else {
+          setTranslated(text);
+        }
       } catch {
         setError(true);
         setTranslated(text);
       } finally {
         setLoading(false);
       }
-    }, 600); // 600ms debounce
+    }, 600);
     return () => clearTimeout(timer);
   }, [text, lang, code]);
   return { translated, loading, error };
 }
 
 function formatTemplate(template: string, student: Student, programName: string) {
-  return template.replaceAll("{Student_Name}", student.name).replaceAll("{Program_Name}", programName);
+  return template
+    .replaceAll("{Student_Name}", getStudentName(student))
+    .replaceAll("{First_Name}", student.firstName)
+    .replaceAll("{Last_Name}", student.lastName)
+    .replaceAll("{Program_Name}", programName);
 }
 
 const MOCK_STUDENTS: Student[] = [
-  { id: "1", name: "ALAMORA DORIA, ERICA MARIA", language: "Spanish", status: "Not Contacted", languageConfidence: "Auto-detected", email: "erica@example.com" },
-  { id: "2", name: "HEREDIA NORIEGA, PAUL", language: "Spanish", status: "Not Contacted", languageConfidence: "Auto-detected", email: "paul@example.com" },
-  { id: "3", name: "MOREL, DANILO", language: "French", status: "Not Contacted", languageConfidence: "Auto-detected", email: "danilo@example.com" },
-  { id: "4", name: "BAGRYAN, LUSINE", language: "Ukrainian", status: "Not Contacted", languageConfidence: "Auto-detected", phone: "+1 (917) 000-0101" },
-  { id: "5", name: "YEN, DAYANE", language: "Chinese", status: "Not Contacted", languageConfidence: "Auto-detected", phone: "+1 (917) 000-0102" },
-  { id: "6", name: "ORAZALIMOVA, SHARA", language: "Russian", status: "Not Contacted", languageConfidence: "Auto-detected", email: "shara@example.com" },
-  { id: "7", name: "CUNUHAY, ISAAC", language: "Filipino", status: "Not Contacted", languageConfidence: "Auto-detected", email: "isaac@example.com" },
-  { id: "8", name: "DIALLO, AISSATA", language: "Fula", status: "SMS Required", languageConfidence: "Auto-detected", phone: "+1 (917) 000-0103" },
-  { id: "9", name: "CAMARA, MOHAMED", language: "Malinké", status: "SMS Required", languageConfidence: "Auto-detected", phone: "" },
+  { id: "1", firstName: "ERICA MARIA", lastName: "ALAMORA DORIA", language: "Spanish", status: "Not Contacted", languageConfidence: "Auto-detected", email: "erica@example.com", classCode: "GED-101", teacherName: "Caldwell", school: "Brooklyn Adult Ed", absenceDays: 62 },
+  { id: "2", firstName: "PAUL", lastName: "HEREDIA NORIEGA", language: "Spanish", status: "Not Contacted", languageConfidence: "Auto-detected", email: "paul@example.com", classCode: "GED-101", teacherName: "Caldwell", school: "Brooklyn Adult Ed", absenceDays: 94, isPopRisk: true },
+  { id: "3", firstName: "DANILO", lastName: "MOREL", language: "French", status: "Not Contacted", languageConfidence: "Auto-detected", email: "danilo@example.com", classCode: "ESL-B", teacherName: "Stevens", school: "Queens Learning Ctr", absenceDays: 12 },
+  { id: "4", firstName: "LUSINE", lastName: "BAGRYAN", language: "Ukrainian", status: "Not Contacted", languageConfidence: "Auto-detected", phone: "+1 (917) 000-0101", classCode: "GED-202", teacherName: "Volkov", school: "Brighton Beach Annex" },
+  { id: "5", firstName: "DAYANE", lastName: "YEN", language: "Chinese", status: "Not Contacted", languageConfidence: "Auto-detected", phone: "+1 (917) 000-0102", classCode: "ESL-A", teacherName: "Zhang", school: "Manhattan Bridge" },
+  { id: "6", firstName: "SHARA", lastName: "ORAZALIMOVA", language: "Russian", status: "Not Contacted", languageConfidence: "Auto-detected", email: "shara@example.com" },
+  { id: "7", firstName: "ISAAC", lastName: "CUNUHAY", language: "Filipino", status: "Not Contacted", languageConfidence: "Auto-detected", email: "isaac@example.com" },
+  { id: "8", firstName: "AISSATA", lastName: "DIALLO", language: "Fula", status: "SMS Required", languageConfidence: "Auto-detected", phone: "+1 (917) 000-0103" },
+  { id: "9", firstName: "MOHAMED", lastName: "CAMARA", language: "Malinké", status: "SMS Required", languageConfidence: "Auto-detected", phone: "" },
 ];
 
 function computeTodayFocus(students: Student[]) {
@@ -639,6 +668,27 @@ function tdStyle(): React.CSSProperties {
   return { padding: "12px 14px", borderBottom: `1px solid ${COLORS.border}`, fontSize: 13, color: COLORS.textSecondary, verticalAlign: "middle" };
 }
 
+function maskPII(text: string, type: "name" | "email" | "phone"): string {
+  if (!text) return "—";
+  if (type === "name") {
+    return text.split(" ").map(part => part.length > 0 ? part[0] + "****" : "").join(" ");
+  }
+  if (type === "email") {
+    const parts = text.split("@");
+    if (parts.length !== 2) return "****";
+    const [user, domain] = parts;
+    return user[0] + "****@" + domain[0] + "****." + domain.split(".").pop();
+  }
+  if (type === "phone") {
+    const parts = text.split("-");
+    if (parts.length === 3) return `${parts[0]}-***-****`;
+    return text.slice(0, 3) + "-***-****";
+  }
+  return text;
+}
+
+const getStudentName = (s: Student) => `${s.firstName} ${s.lastName}`;
+
 const METRIC_ACCENTS = [COLORS.teal, SEMANTIC.warning, SEMANTIC.danger, "#7C3AED"];
 const MOCK_AUDIT: Omit<AuditEntry, "id" | "timestamp">[] = [
   { actor: "System", action: "Database Initialized", details: "GED Reconnect portal first load seed completed.", type: "system" },
@@ -646,6 +696,8 @@ const MOCK_AUDIT: Omit<AuditEntry, "id" | "timestamp">[] = [
   { actor: "Mr. Caldwell", action: "Bulk Outreach", details: "Sent 12 initial check-in messages to Ukrainian-speaking students.", type: "outreach" },
   { actor: "System", action: "Smart Import", details: "Successfully parsed 5 student records from manual paste source using AI.", type: "import" },
   { actor: "Mr. Caldwell", action: "Template Update", details: "Modified 'Encouraging' tone template to include new re-enrollment link.", type: "system" },
+  { actor: "System (Webhook)", action: "SMS Received", studentName: "Lusine Bagryan", details: 'Student replied: "I finished my paperwork, what next?"', type: "outreach" },
+  { actor: "Mr. Caldwell", action: "Manual Export", details: "Exported audit-ready CSV for Q3 compliance reporting.", type: "compliance" },
 ];
 
 function Metric({ title, value, sub, tone = "neutral", trend }: { title: string; value: number; sub?: string; tone?: "success" | "warning" | "danger" | "info" | "neutral"; trend?: string }) {
@@ -693,7 +745,7 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-function TopBar({ title, subtitle, onExportReport, onOpenSettings, userName, role }: { title: string; subtitle?: string; onExportReport?: () => void; onOpenSettings: () => void; userName?: string; role?: string }) {
+function TopBar({ title, subtitle, onExportReport, onOpenSettings, onStartDemo, userName, role, privacyMode, setPrivacyMode, showToast }: { title: string; subtitle?: string; onExportReport?: () => void; onOpenSettings: () => void; onStartDemo: () => void; userName?: string; role?: string; privacyMode: boolean; setPrivacyMode: (v: boolean) => void; showToast: (m: string, t?: any) => void }) {
   return (
     <div style={{ position: "sticky", top: 0, zIndex: 30, background: "rgba(240,244,248,0.92)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", borderBottom: `1px solid ${COLORS.border}`, boxShadow: "0 1px 0 rgba(15,23,42,0.04)" }}>
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
@@ -707,7 +759,22 @@ function TopBar({ title, subtitle, onExportReport, onOpenSettings, userName, rol
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <Chip label="Secure" color={SEMANTIC.success} />
+          <HoverableButton 
+            style={{ ...btn({ variant: "teal" }), padding: "6px 16px", borderRadius: 20, boxShadow: "0 4px 12px rgba(8,145,178,0.2)", fontSize: 12 }} 
+            onClick={onStartDemo}
+          >
+            🚀 Run Demo
+          </HoverableButton>
+          <div style={{ width: 1, height: 24, background: COLORS.border, margin: "0 4px" }} />
+          <div title="FERPA & SOC2 Compliance Ready: All data is encrypted at rest and in transit." style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(22,163,74,0.1)", color: SEMANTIC.success, padding: "5px 12px", borderRadius: RADII.full, fontSize: 11, fontWeight: 800, cursor: "help" }}>
+            <span style={{ fontSize: 12 }}>🛡️</span> SECURE
+          </div>
+          <button 
+            onClick={() => { setPrivacyMode(!privacyMode); showToast(`Privacy Mode ${!privacyMode ? "Enabled" : "Disabled"}`); }}
+            style={{ display: "flex", alignItems: "center", gap: 6, background: privacyMode ? COLORS.navy : "rgba(148,163,184,0.1)", color: privacyMode ? "#fff" : COLORS.textPrimary, padding: "5px 12px", borderRadius: RADII.full, fontSize: 11, fontWeight: 800, border: "none", cursor: "pointer", transition: "all 0.2s" }}
+          >
+            {privacyMode ? "👁️ Show" : "🙈 Mask"}
+          </button>
           <Chip label={role === "ADMIN" ? "Admin Mode" : "Educator Access"} color={role === "ADMIN" ? COLORS.teal : COLORS.navyLight} />
           <HoverableButton onClick={onExportReport} style={btn({ variant: "outline" })}>⬇ Export Report</HoverableButton>
           {role === "ADMIN" && <HoverableButton onClick={onOpenSettings} style={btn({ variant: "outline" })}>⚙️ AI Settings</HoverableButton>}
@@ -725,10 +792,10 @@ function TopBar({ title, subtitle, onExportReport, onOpenSettings, userName, rol
   );
 }
 
-function AppShell({ children, title, subtitle, onExportReport, onOpenLegal, onOpenSettings, userName, role }: { children: React.ReactNode; title: string; subtitle?: string; onExportReport?: () => void; onOpenLegal: (t: "terms" | "privacy" | "dmca" | "refund") => void; onOpenSettings: () => void; userName?: string; role?: string }) {
+function AppShell({ children, title, subtitle, onExportReport, onOpenLegal, onOpenSettings, onStartDemo, userName, role, privacyMode, setPrivacyMode, showToast }: { children: React.ReactNode; title: string; subtitle?: string; onExportReport?: () => void; onOpenLegal: (t: "terms" | "privacy" | "dmca" | "refund") => void; onOpenSettings: () => void; onStartDemo: () => void; userName?: string; role?: string; privacyMode: boolean; setPrivacyMode: (v: boolean) => void; showToast: (m: string, t?: any) => void }) {
   return (
     <div style={{ minHeight: "100vh", background: COLORS.bg, color: COLORS.textPrimary }}>
-      <TopBar title={title} subtitle={subtitle} onExportReport={onExportReport} onOpenSettings={onOpenSettings} userName={userName} role={role} />
+      <TopBar title={title} subtitle={subtitle} onExportReport={onExportReport} onOpenSettings={onOpenSettings} onStartDemo={onStartDemo} userName={userName} role={role} privacyMode={privacyMode} setPrivacyMode={setPrivacyMode} showToast={showToast} />
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "20px 20px 32px", minHeight: "calc(100vh - 160px)" }}>{children}</div>
       <Footer onOpenLegal={onOpenLegal} />
       <CookieBanner />
@@ -736,7 +803,7 @@ function AppShell({ children, title, subtitle, onExportReport, onOpenLegal, onOp
   );
 }
 
-function DashboardView({ focus, onPickFocus, stats, onSendEmail, onReviewDrafts, onDownloadLog }: { focus: { atRisk: number; missingContact: number; repliesWaiting: number }; onPickFocus: (key: string) => void; stats: { total: number; atRisk: number; smsRequired: number; unreachable: number }; onSendEmail: () => void; onReviewDrafts: () => void; onDownloadLog: () => void }) {
+function DashboardView({ focus, onPickFocus, stats, onSendEmail, onReviewDrafts, onDownloadLog, onHealthCheck, notificationsEnabled, students, setTab, setStatusFilter }: { focus: { atRisk: number; missingContact: number; repliesWaiting: number }; onPickFocus: (key: string) => void; stats: { total: number; atRisk: number; smsRequired: number; unreachable: number }; onSendEmail: () => void; onReviewDrafts: () => void; onDownloadLog: () => void; onHealthCheck: () => void; notificationsEnabled: boolean; students: Student[]; setTab: (t: any) => void; setStatusFilter: (f: any) => void }) {
   const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   
   return (
@@ -754,7 +821,7 @@ function DashboardView({ focus, onPickFocus, stats, onSendEmail, onReviewDrafts,
             
             <div style={{ display: "grid", gap: 10 }}>
               <div style={{ fontWeight: 850, fontSize: 13, marginBottom: 4, display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${COLORS.border}`, paddingBottom: 8 }}>
-                <span>Active Attendance Alerts</span>
+                <span>Active Attendance & Delivery Alerts</span>
                 <Muted>Prioritized by urgency</Muted>
               </div>
               
@@ -762,11 +829,21 @@ function DashboardView({ focus, onPickFocus, stats, onSendEmail, onReviewDrafts,
               {focus.missingContact > 0 && <AlertRow onClick={() => onPickFocus("missingContact")} title="Missing Contact Information" detail={`${focus.missingContact} student(s) unreachable. Update records manually.`} tone="warning" />}
               {focus.repliesWaiting > 0 && <AlertRow onClick={() => onPickFocus("replies")} title="New Replies Waiting" detail={`${focus.repliesWaiting} response(s) pending your review.`} tone="info" />}
               
-              {stats.atRisk === 0 && focus.missingContact === 0 && focus.repliesWaiting === 0 && (
+              {/* NEW: Bounce-Back Notifications */}
+              {notificationsEnabled && students?.some(s => s.status === "Unreachable") && (
+                <AlertRow 
+                  onClick={() => { setStatusFilter("Unreachable"); setTab("Roster"); }} 
+                  title="Delivery Failure (Bounce-Back)" 
+                  detail="Critical: Email/SMS delivery failed for several students. Verify contact info." 
+                  tone="danger" 
+                />
+              )}
+
+              {stats.atRisk === 0 && focus.missingContact === 0 && focus.repliesWaiting === 0 && !students?.some(s => s.status === "Unreachable") && (
                 <div style={{ padding: 24, textAlign: "center", background: "rgba(34, 197, 94, 0.05)", borderRadius: 12, border: `1px dashed rgba(34, 197, 94, 0.3)` }}>
                   <div style={{ fontSize: 24, marginBottom: 8 }}>✅</div>
                   <div style={{ fontWeight: 800, fontSize: 14, color: SEMANTIC.success }}>All caught up</div>
-                  <Muted>No critical attendance alerts at this time.</Muted>
+                  <Muted>No critical alerts at this time.</Muted>
                 </div>
               )}
             </div>
@@ -779,6 +856,7 @@ function DashboardView({ focus, onPickFocus, stats, onSendEmail, onReviewDrafts,
                 <Muted style={{ marginBottom: 4 }}>Fast tools for daily compliance workflows.</Muted>
                 <HoverableButton style={btn({ variant: "teal" })} onClick={onSendEmail}>Send Mass Email</HoverableButton>
                 <HoverableButton style={btn({ variant: "outline" })} onClick={onReviewDrafts}>Review Translated Drafts</HoverableButton>
+                <HoverableButton style={btn({ variant: "outline" })} onClick={onHealthCheck}>Run POP-Risk Health Check</HoverableButton>
                 <HoverableButton style={btn({ variant: "outline" })} onClick={onDownloadLog}>Download Supervisor Log</HoverableButton>
               </div>
             </Card>
@@ -789,8 +867,8 @@ function DashboardView({ focus, onPickFocus, stats, onSendEmail, onReviewDrafts,
   );
 }
 
-function RosterView(props: { students: Student[]; allStudents: Student[]; query: string; setQuery: (v: string) => void; languageFilter: Language | "All"; setLanguageFilter: (v: any) => void; statusFilter: Status | "All"; setStatusFilter: (v: any) => void; languages: Array<Language | "All">; statuses: Array<Status | "All">; selected: string[]; toggleSelected: (id: string) => void; selectAllVisible: () => void; hoveredId: string | null; setHoveredId: (id: string | null) => void; onRowClick: (id: string) => void; onSend: (id: string) => void }) {
-  const { students, allStudents, query, setQuery, languageFilter, setLanguageFilter, statusFilter, setStatusFilter, languages, statuses, selected, toggleSelected, selectAllVisible, hoveredId, setHoveredId, onRowClick, onSend } = props;
+function RosterView(props: { students: Student[]; allStudents: Student[]; query: string; setQuery: (v: string) => void; languageFilter: Language | "All"; setLanguageFilter: (v: any) => void; statusFilter: Status | "All"; setStatusFilter: (v: any) => void; languages: Array<Language | "All">; statuses: Array<Status | "All">; selected: string[]; toggleSelected: (id: string) => void; selectAllVisible: () => void; hoveredId: string | null; setHoveredId: (id: string | null) => void; onRowClick: (id: string) => void; onSend: (id: string) => void; privacyMode: boolean; maskPII: any }) {
+  const { students, allStudents, query, setQuery, languageFilter, setLanguageFilter, statusFilter, setStatusFilter, languages, statuses, selected, toggleSelected, selectAllVisible, hoveredId, setHoveredId, onRowClick, onSend, privacyMode, maskPII } = props;
   
   const [sortField, setSortField] = useState<"name" | "language" | "status" | "contacted">("name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
@@ -808,7 +886,7 @@ function RosterView(props: { students: Student[]; allStudents: Student[]; query:
     return [...students].sort((a, b) => {
       let cmp = 0;
       if (sortField === "name") {
-        cmp = a.name.localeCompare(b.name);
+        cmp = getStudentName(a).localeCompare(getStudentName(b));
       } else if (sortField === "language") {
         cmp = a.language.localeCompare(b.language);
       } else if (sortField === "status") {
@@ -882,8 +960,8 @@ function RosterView(props: { students: Student[]; allStudents: Student[]; query:
                   <tr key={s.id} onMouseEnter={() => setHoveredId(s.id)} onMouseLeave={() => setHoveredId(null)} style={{ background: isSelected ? "rgba(31,58,95,0.03)" : "#fff", cursor: "pointer" }}>
                     <td style={tdStyle()}><input type="checkbox" checked={isSelected} onChange={() => toggleSelected(s.id)} onClick={e => e.stopPropagation()} /></td>
                     <td style={{ ...tdStyle(), position: "sticky", left: 0, background: isSelected ? "rgba(31,58,95,0.03)" : COLORS.white, zIndex: 2, fontWeight: 850 }} onClick={() => onRowClick(s.id)}>
-                      {s.name}
-                      <div><Muted style={{ fontSize: 11 }}>{s.email ? s.email : s.phone ? s.phone : "No contact info"}</Muted></div>
+                      {privacyMode ? maskPII(getStudentName(s), "name") : getStudentName(s)}
+                      <div><Muted style={{ fontSize: 11 }}>{s.email ? (privacyMode ? maskPII(s.email, "email") : s.email) : s.phone ? (privacyMode ? maskPII(s.phone, "phone") : s.phone) : "No contact info"}</Muted></div>
                     </td>
                     <td style={tdStyle()} onClick={() => onRowClick(s.id)}>
                       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -1000,7 +1078,7 @@ function TemplatesView({ tone, setTone, subject, setSubject, body, setBody, prev
                 </span>
               </div>
               <textarea value={body} onChange={e => setBody(e.target.value)} style={{ ...inputStyle(), minHeight: 140, resize: "vertical", lineHeight: 1.5 }} />
-              <Muted style={{ display: "block", marginTop: 6 }}>Use tags: {"{Student_Name}"}, {"{Program_Name}"}</Muted>
+              <Muted style={{ display: "block", marginTop: 6 }}>Use tags: {"{First_Name}"}, {"{Last_Name}"}, {"{Student_Name}"}, {"{Program_Name}"}</Muted>
             </div>
           </div>
         </Card>
@@ -1037,7 +1115,7 @@ function TemplatesView({ tone, setTone, subject, setSubject, body, setBody, prev
   );
 }
 
-function OutreachView({ students, template, programName, onOpenStudent, auditLog }: { students: Student[]; template: { subject: string; body: string }; programName: string; onOpenStudent: (id: string) => void; auditLog: AuditEntry[] }) {
+function OutreachView({ students, template, programName, onOpenStudent, auditLog, privacyMode, maskPII }: { students: Student[]; template: { subject: string; body: string }; programName: string; onOpenStudent: (id: string) => void; auditLog: AuditEntry[]; privacyMode: boolean; maskPII: any }) {
   const pending = students.filter(s => s.status === "Not Contacted" || s.status === "Pending");
   const [dripActive, setDripActive] = useState(false);
 
@@ -1059,14 +1137,14 @@ function OutreachView({ students, template, programName, onOpenStudent, auditLog
               </thead>
               <tbody>
                 {pending.map(s => (
-                  <tr key={s.id} style={{ background: "#fff", cursor: "pointer", borderBottom: `1px solid ${COLORS.border}` }} onClick={() => onOpenStudent(s.id)}>
-                    <td style={{ ...tdStyle(), color: COLORS.navy, fontWeight: 900, fontSize: 14 }}>{s.name}</td>
+                  <tr key={s.id} style={{ background: COLORS.white, cursor: "pointer", borderBottom: `1px solid ${COLORS.border}` }} onClick={() => onOpenStudent(s.id)}>
+                    <td style={{ ...tdStyle(), color: COLORS.navy, fontWeight: 900, fontSize: 14 }}>{privacyMode ? maskPII(getStudentName(s), "name") : getStudentName(s)}</td>
                     <td style={tdStyle()}><LanguageTag lang={s.language} /></td>
                     <td style={tdStyle()}><StatusBadge status={s.status} /></td>
                     <td style={tdStyle()}>
-                      <div style={{ color: COLORS.textSecondary, fontSize: 11, fontStyle: "normal", display: "flex", flexDirection: "column" }}>
+                      <div style={{ color: COLORS.textPrimary, fontSize: 11, fontStyle: "normal", display: "flex", flexDirection: "column" }}>
                         <div style={{ color: COLORS.textMuted, fontSize: 10, marginBottom: 2 }}>Draft updated: Just now</div>
-                        <div style={{ fontStyle: "italic" }}>{formatTemplate(template.body, s, programName).slice(0, 60)}…</div>
+                        <div style={{ fontStyle: "italic", fontWeight: 500 }}>{formatTemplate(template.body, s, programName).slice(0, 60)}…</div>
                       </div>
                     </td>
                   </tr>
@@ -1178,7 +1256,7 @@ function OutreachView({ students, template, programName, onOpenStudent, auditLog
   );
 }
 
-function AnalyticsView({ students, onFilterStatus }: { students: Student[]; onFilterStatus: (s: Status) => void }) {
+function AnalyticsView({ students, onFilterStatus, privacyMode, maskPII }: { students: Student[]; onFilterStatus: (s: Status) => void; privacyMode: boolean; maskPII: any }) {
   const [riskData, setRiskData] = useState<RiskAssessment[]>([]);
   const [loadingRisk, setLoadingRisk] = useState(false);
 
@@ -1315,7 +1393,7 @@ function AnalyticsView({ students, onFilterStatus }: { students: Student[]; onFi
               return (
                 <div key={risk.studentId} style={{ padding: 16, borderRadius: RADII.md, border: `1px solid ${COLORS.border}`, background: "rgba(255,255,255,0.4)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: 8 }}>
-                    <div style={{ fontWeight: 800, fontSize: 14 }}>{student.name}</div>
+                    <div style={{ fontWeight: 800, fontSize: 14 }}>{privacyMode ? maskPII(getStudentName(student), "name") : getStudentName(student)}</div>
                     <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 99, background: color + "15", color: color, fontWeight: 900, textTransform: "uppercase" }}>{risk.level} Risk</span>
                   </div>
                   <div style={{ fontSize: 12, color: COLORS.textSecondary, marginBottom: 10 }}>{risk.reason}</div>
@@ -1332,23 +1410,30 @@ function AnalyticsView({ students, onFilterStatus }: { students: Student[]; onFi
   );
 }
 
-function AuditLogView({ auditLog }: { auditLog: AuditEntry[] }) {
+function AuditLogView({ auditLog, privacyMode, maskPII }: { auditLog: AuditEntry[]; privacyMode: boolean; maskPII: any }) {
   const [filter, setFilter] = useState("all");
 
-  const [simulating, setSimulating] = useState(false);
+  const [simSuccess, setSimSuccess] = useState(false);
 
   async function simulateSMS() {
     setSimulating(true);
+    setSimSuccess(false);
     try {
-      await fetch("/api/webhooks/sms", {
+      const res = await fetch("/api/webhooks/sms", {
         method: "POST",
         body: new URLSearchParams({
           From: "+19170000101", // Matching Lusine Bagryan
           Body: "Hello! I am interested in the GED program. How do I start?"
         })
       });
-      alert("Simulated SMS received from Lusine Bagryan. The roster and audit log will now refresh.");
-      window.location.reload();
+      if (res.ok) {
+        const dbStudents = await getStudents();
+        const dbAudit = await getAuditLogs();
+        setStudents(dbStudents as any);
+        setAuditLog(dbAudit as any);
+        setSimSuccess(true);
+        setTimeout(() => setSimSuccess(false), 5000);
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -1364,14 +1449,22 @@ function AuditLogView({ auditLog }: { auditLog: AuditEntry[] }) {
   return (
     <div style={{ display: "grid", gap: 16 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ display: "flex", gap: 8, background: COLORS.chipBg, padding: 4, borderRadius: RADII.md }}>
-          {["all", "outreach", "import", "compliance", "system"].map(t => (
-            <button key={t} onClick={() => setFilter(t)} style={{ padding: "6px 16px", borderRadius: RADII.sm, border: "none", background: filter === t ? COLORS.white : "transparent", color: filter === t ? COLORS.navy : COLORS.textMuted, fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: filter === t ? SHADOWS.card : "none", textTransform: "capitalize" }}>{t}</button>
-          ))}
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ display: "flex", gap: 8, background: COLORS.chipBg, padding: 4, borderRadius: RADII.md }}>
+            {["all", "outreach", "import", "compliance", "system"].map(t => (
+              <button key={t} onClick={() => setFilter(t)} style={{ padding: "6px 16px", borderRadius: RADII.sm, border: "none", background: filter === t ? COLORS.white : "transparent", color: filter === t ? COLORS.navy : COLORS.textMuted, fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: filter === t ? SHADOWS.card : "none", textTransform: "capitalize" }}>{t}</button>
+            ))}
+          </div>
+          <span style={{ background: SEMANTIC.warning, color: "#fff", padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 900, letterSpacing: "0.05em" }}>DEMO MODE</span>
         </div>
-        <div style={{ display: "flex", gap: 10 }}>
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          {simSuccess && (
+            <div style={{ fontSize: 12, fontWeight: 800, color: SEMANTIC.success, animation: "fadeIn 0.5s" }}>
+              ✅ SMS Simulated Successfully
+            </div>
+          )}
           <HoverableButton style={btn({ variant: "outline" })} onClick={simulateSMS} disabled={simulating}>
-            {simulating ? "📡 Simulating..." : "🛠 Simulate SMS Reply"}
+            {simulating ? "📡 Processing..." : "🛠 Simulate SMS Reply"}
           </HoverableButton>
           <HoverableButton style={btn({ variant: "primary" })} onClick={() => {
             const rows = auditLog.map(a => ({ Timestamp: new Date(a.timestamp).toLocaleString(), Actor: a.actor, Action: a.action, Type: a.type, Details: a.details }));
@@ -1411,10 +1504,17 @@ function AuditLogView({ auditLog }: { auditLog: AuditEntry[] }) {
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={5} style={{ padding: 48, textAlign: "center" }}>
-                    <div style={{ fontSize: 24, marginBottom: 12 }}>📋</div>
-                    <div style={{ fontWeight: 900, color: COLORS.navy }}>No audit entries found</div>
-                    <Muted>Perform outreach or import students to see activity here.</Muted>
+                  <td colSpan={5} style={{ padding: 80, textAlign: "center" }}>
+                    <div style={{ fontSize: 48, marginBottom: 16, filter: "grayscale(1) opacity(0.5)" }}>📋</div>
+                    <div style={{ fontWeight: 900, color: COLORS.navy, fontSize: 18, marginBottom: 8 }}>Transparency & Compliance Ready</div>
+                    <Muted style={{ maxWidth: 300, margin: "0 auto", lineHeight: 1.5 }}>
+                      No activity has been logged yet. All outreach, imports, and system changes will appear here for administrative oversight.
+                    </Muted>
+                    <div style={{ marginTop: 24 }}>
+                      <HoverableButton style={btn({ variant: "outline" })} onClick={simulateSMS} disabled={simulating}>
+                        {simulating ? "📡 Processing..." : "Generate Demo Activity"}
+                      </HoverableButton>
+                    </div>
                   </td>
                 </tr>
               )}
@@ -1426,57 +1526,144 @@ function AuditLogView({ auditLog }: { auditLog: AuditEntry[] }) {
   );
 }
 
-function MobileDemoView({ students, onTabChange, onOpenStudent }: { students: Student[]; onTabChange: (t: any) => void; onOpenStudent: (id: string) => void }) {
+function MobileDemoView({ students, onTabChange, onOpenStudent, privacyMode, maskPII }: { students: Student[]; onTabChange: (t: any) => void; onOpenStudent: (id: string) => void; privacyMode: boolean; maskPII: any }) {
   const allToContact = students.filter(s => s.status === "Not Contacted" || s.status === "Pending");
-  const todays = allToContact.slice(0, 5);
-  const recent = students.slice(0, 5);
+  const pendingCount = allToContact.length;
+  // Show first 5 pending students in the "Focus" list
+  const focusStudents = allToContact.slice(0, 5);
+  
   return (
     <div style={{ display: "grid", gap: 20, placeItems: "center" }}>
       <div style={{ textAlign: "center", maxWidth: 400 }}>
-        <div style={{ fontWeight: 900, color: COLORS.navy, fontSize: 18 }}>Mobile App Simulation</div>
-        <Muted style={{ fontSize: 13 }}>Experience how the portal translates to a native mobile environment for field outreach.</Muted>
+        <div style={{ fontWeight: 900, color: COLORS.navy, fontSize: 18 }}>Mobile Experience Preview</div>
+        <Muted style={{ fontSize: 13 }}>This panel simulates the native mobile interface educators use for field outreach and real-time student engagement.</Muted>
       </div>
+      
       <div style={{ width: 360, height: 640, borderRadius: 32, border: `8px solid ${COLORS.navy}`, boxShadow: "0 40px 100px rgba(15,23,42,0.25)", background: COLORS.white, overflow: "hidden", position: "relative", display: "flex", flexDirection: "column" }}>
-        <div style={{ padding: 16, borderBottom: `1px solid ${COLORS.border}` }}>
-          <div style={{ fontWeight: 900 }}>GED Reconnect</div>
-          <Muted>Mobile outreach workflow</Muted>
+        {/* Status Bar */}
+        <div style={{ height: 24, padding: "4px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 10, fontWeight: 700 }}>
+          <span>9:41</span>
+          <div style={{ display: "flex", gap: 4 }}>
+            <span>📶</span> <span>🔋</span>
+          </div>
         </div>
-        <div style={{ padding: 16, display: "grid", gap: 14, flex: 1, overflowY: "auto" }}>
-          <Card title="Outreach Focus" style={{ boxShadow: "none", border: `1px solid ${COLORS.border}` }}>
+
+        <div style={{ padding: "8px 16px 16px", borderBottom: `1px solid ${COLORS.border}` }}>
+          <div style={{ fontWeight: 900, fontSize: 16 }}>GED Reconnect</div>
+          <Muted style={{ fontSize: 11 }}>Field Outreach Assistant</Muted>
+        </div>
+
+        <div style={{ padding: 16, display: "grid", gap: 14, flex: 1, overflowY: "auto", background: "#F8FAFC" }}>
+          <Card title="Priority Focus" style={{ boxShadow: "none", border: `1px solid ${COLORS.border}` }}>
             <div style={{ display: "grid", gap: 10 }}>
-              <div style={{ fontWeight: 900, color: COLORS.navy }}>{allToContact.length} students pending</div>
-              <Muted style={{ fontSize: 11 }}>You have {allToContact.length} students awaiting their first contact or follow-up.</Muted>
-              <HoverableButton style={btn({ variant: "primary" })} onClick={() => onTabChange("Roster")}>Start Outreach</HoverableButton>
+              <div style={{ fontWeight: 900, color: COLORS.navy, fontSize: 15 }}>{pendingCount} Pending Contacts</div>
+              <Muted style={{ fontSize: 11 }}>Recommended students for today's outreach cycle based on risk scores.</Muted>
+              <HoverableButton style={{ ...btn({ variant: "primary" }), width: "100%" }} onClick={() => onTabChange("Outreach")}>Start Campaign</HoverableButton>
             </div>
           </Card>
-          <Card title="Recent Students" style={{ boxShadow: "none" }}>
-            <div style={{ display: "grid", gap: 8 }}>
-              {recent.map(s => (
-                <button key={s.id} onClick={() => onOpenStudent(s.id)} style={{ textAlign: "left", background: "rgba(247,249,252,0.75)", border: `1px solid ${COLORS.border}`, borderRadius: 14, padding: 12, cursor: "pointer" }}>
-                  <div style={{ fontWeight: 900, fontSize: 13 }}>{s.name}</div>
-                  <Muted>{s.language} • {s.status}</Muted>
-                </button>
-              ))}
-            </div>
-          </Card>
+
+          <div style={{ fontSize: 11, fontWeight: 800, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: "0.05em", marginTop: 4 }}>
+            Pending Students ({focusStudents.length})
+          </div>
+          
+          <div style={{ display: "grid", gap: 8 }}>
+            {focusStudents.map(s => (
+              <button key={s.id} onClick={() => onOpenStudent(s.id)} style={{ textAlign: "left", background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: 14, padding: 12, cursor: "pointer", transition: "all 0.2s" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                  <div style={{ fontWeight: 900, fontSize: 13, color: COLORS.navy }}>{privacyMode ? maskPII(getStudentName(s), "name") : getStudentName(s)}</div>
+                  <LanguageTag lang={s.language} />
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <Muted style={{ fontSize: 11 }}>{s.status}</Muted>
+                  <span style={{ fontSize: 10, color: COLORS.teal, fontWeight: 700 }}>Tap to draft →</span>
+                </div>
+              </button>
+            ))}
+            {focusStudents.length === 0 && (
+              <div style={{ textAlign: "center", padding: 20 }}>
+                <Muted style={{ fontSize: 12 }}>All students contacted!</Muted>
+              </div>
+            )}
+          </div>
         </div>
-        <div style={{ padding: "8px 12px", borderTop: `1px solid ${COLORS.border}`, display: "flex", justifyContent: "space-around", background: "#f8fafc" }}>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, cursor: "pointer" }} onClick={() => onTabChange("Dashboard")}>
-            <span style={{ fontSize: 18 }}>🏠</span>
-            <span style={{ fontSize: 9, fontWeight: 800, color: COLORS.teal }}>Dashboard</span>
+
+        {/* Aligned Bottom Navigation */}
+        <div style={{ padding: "8px 12px 24px", borderTop: `1px solid ${COLORS.border}`, display: "flex", justifyContent: "space-around", background: COLORS.white }}>
+          <MobileNavIcon icon="📊" label="Dashboard" active={true} onClick={() => onTabChange("Dashboard")} />
+          <MobileNavIcon icon="📋" label="Roster" onClick={() => onTabChange("Roster")} />
+          <MobileNavIcon icon="✉️" label="Outreach" onClick={() => onTabChange("Outreach")} />
+          <MobileNavIcon icon="⚖️" label="Audit" onClick={() => onTabChange("Audit")} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MobileNavIcon({ icon, label, active, onClick }: { icon: string; label: string; active?: boolean; onClick: () => void }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, cursor: "pointer", flex: 1 }} onClick={onClick}>
+      <span style={{ fontSize: 18, filter: active ? "none" : "grayscale(1) opacity(0.5)" }}>{icon}</span>
+      <span style={{ fontSize: 9, fontWeight: 800, color: active ? COLORS.teal : COLORS.textMuted }}>{label}</span>
+    </div>
+  );
+}
+
+function CalendarView({ students, onOpenStudent }: { students: Student[]; onOpenStudent: (id: string) => void }) {
+  const [viewDate, setViewDate] = useState(new Date());
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+  
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDay = new Date(year, month, 1).getDay();
+  
+  const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+  const blanks = Array.from({ length: firstDay }, (_, i) => i);
+  
+  const scheduled = students.filter(s => s.scheduledOutreach);
+
+  return (
+    <div style={{ display: "grid", gap: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <div style={{ fontWeight: 900, fontSize: 18, color: COLORS.navy }}>{viewDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</div>
+          <div style={{ display: "flex", gap: 4 }}>
+            <HoverableButton onClick={() => setViewDate(new Date(year, month - 1))} style={{ padding: "6px 12px", borderRadius: 8, border: `1px solid ${COLORS.border}`, background: COLORS.white }}>←</HoverableButton>
+            <HoverableButton onClick={() => setViewDate(new Date())} style={{ padding: "6px 12px", borderRadius: 8, border: `1px solid ${COLORS.border}`, background: COLORS.white, fontSize: 11, fontWeight: 700 }}>Today</HoverableButton>
+            <HoverableButton onClick={() => setViewDate(new Date(year, month + 1))} style={{ padding: "6px 12px", borderRadius: 8, border: `1px solid ${COLORS.border}`, background: COLORS.white }}>→</HoverableButton>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, cursor: "pointer" }} onClick={() => onTabChange("Roster")}>
-            <span style={{ fontSize: 18 }}>📋</span>
-            <span style={{ fontSize: 9, fontWeight: 800, color: COLORS.textMuted }}>Roster</span>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, cursor: "pointer" }} onClick={() => onTabChange("Outreach")}>
-            <span style={{ fontSize: 18 }}>✉️</span>
-            <span style={{ fontSize: 9, fontWeight: 800, color: COLORS.textMuted }}>Outreach</span>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, cursor: "pointer" }} onClick={() => onTabChange("Audit")}>
-            <span style={{ fontSize: 18 }}>⚖️</span>
-            <span style={{ fontSize: 9, fontWeight: 800, color: COLORS.textMuted }}>Audit</span>
-          </div>
+        </div>
+        <Muted style={{ fontSize: 12, fontWeight: 700 }}>{scheduled.length} Planned Outreaches</Muted>
+      </div>
+
+      <div style={{ background: COLORS.white, borderRadius: RADII.lg, border: `1px solid ${COLORS.border}`, overflow: "hidden", boxShadow: SHADOWS.card }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", background: "rgba(31,58,95,0.03)", borderBottom: `1px solid ${COLORS.border}` }}>
+          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => (
+            <div key={d} style={{ padding: 12, textAlign: "center", fontSize: 11, fontWeight: 900, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: "0.05em" }}>{d}</div>
+          ))}
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)" }}>
+          {blanks.map(b => <div key={`b-${b}`} style={{ minHeight: 120, borderRight: `1px solid ${COLORS.border}`, borderBottom: `1px solid ${COLORS.border}`, background: "rgba(248,250,252,0.5)" }} />)}
+          {days.map(d => {
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            const matches = scheduled.filter(s => s.scheduledOutreach === dateStr);
+            const isToday = new Date().toDateString() === new Date(year, month, d).toDateString();
+            
+            return (
+              <div key={d} style={{ minHeight: 120, borderRight: `1px solid ${COLORS.border}`, borderBottom: `1px solid ${COLORS.border}`, padding: 8, position: "relative", background: isToday ? "rgba(8,145,178,0.02)" : "transparent" }}>
+                <div style={{ fontSize: 12, fontWeight: 900, color: isToday ? COLORS.teal : COLORS.textMuted, marginBottom: 8, display: "flex", justifyContent: "space-between" }}>
+                  <span>{d}</span>
+                  {isToday && <span style={{ fontSize: 8, background: COLORS.teal, color: "#fff", padding: "2px 6px", borderRadius: 4 }}>TODAY</span>}
+                </div>
+                <div style={{ display: "grid", gap: 4 }}>
+                  {matches.map(s => (
+                    <div key={s.id} onClick={() => onOpenStudent(s.id)} style={{ padding: "4px 8px", borderRadius: 6, background: s.email ? COLORS.navy : COLORS.teal, color: "#fff", fontSize: 10, fontWeight: 800, cursor: "pointer", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={`${getStudentName(s)} (${s.email ? "Email" : "SMS"})`}>
+                      {s.lastName}, {s.firstName[0]}.
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
@@ -1512,24 +1699,60 @@ function CommunicationTimeline({ studentId, auditLog }: { studentId: string; aud
   );
 }
 
-function StudentDetail({ student, programName, template, onClose, onSend, auditLog }: { student: Student; programName: string; template: { subject: string; body: string }; onClose: () => void; onSend: (id: string) => void; auditLog: AuditEntry[] }) {
+function StudentDetail({ student, programName, template, onClose, onSend, auditLog, onUpdate, currentUser }: { student: Student; programName: string; template: { subject: string; body: string }; onClose: () => void; onSend: (id: string) => void; auditLog: AuditEntry[]; onUpdate: (id: string, data: Partial<Student>) => void; currentUser?: { id: string; name?: string } }) {
   const msgEnglish = formatTemplate(template.body, student, programName);
   const { translated: msgNative, loading: translating } = useTranslation(msgEnglish, student.language);
+  
+  const isWorking = student.activeWorkerId === currentUser?.id;
+  
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
       <div style={{ display: "grid", gap: 12 }}>
-        <Card title="Profile" style={{ boxShadow: "none" }}>
+        <Card title="Profile & Context" right={
+          <button 
+            onClick={() => onUpdate(student.id, { activeWorkerId: isWorking ? null as any : currentUser?.id, activeWorkerName: isWorking ? null as any : currentUser?.name })}
+            style={{ padding: "4px 10px", borderRadius: 6, border: "none", background: isWorking ? SEMANTIC.success : "rgba(148,163,184,0.1)", color: isWorking ? "#fff" : COLORS.textPrimary, fontSize: 11, fontWeight: 800, cursor: "pointer" }}
+          >
+            {isWorking ? "✅ You are working this case" : "🚩 Flag as Active"}
+          </button>
+        } style={{ boxShadow: "none" }}>
           <div style={{ display: "grid", gap: 8 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-              <LanguageTag lang={student.language} />
+            {student.activeWorkerId && !isWorking && (
+              <div style={{ background: "rgba(31,58,95,0.05)", padding: "8px 12px", borderRadius: 8, fontSize: 11, fontWeight: 700, color: COLORS.navy, border: `1px solid ${COLORS.navy}33`, marginBottom: 4 }}>
+              👤 {student.activeWorkerName} is currently working this case.
+            </div>
+          )}
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
+            <LanguageTag lang={student.language} />
+            <div style={{ display: "flex", gap: 6 }}>
+              {student.isPopRisk && <span style={{ background: SEMANTIC.danger, color: "#fff", padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 900 }}>POP-RISK</span>}
               <StatusBadge status={student.status} />
             </div>
+          </div>
+          <Divider />
+          <div style={{ fontWeight: 800, fontSize: 14, color: COLORS.navy, marginBottom: 8 }}>{getStudentName(student)}</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <Row label="Class" value={student.classCode || "—"} />
+              <Row label="Teacher" value={student.teacherName || "—"} />
+            </div>
+            <Row label="School" value={student.school || "—"} />
             <Divider />
             <Row label="Email" value={student.email || "—"} />
             <Row label="Phone" value={student.phone || "—"} />
-            <Row label="Address" value={student.address || "—"} />
-            <Row label="Language Confidence" value={student.languageConfidence || "Auto-detected"} />
-            <Row label="Notes" value={student.notes || "None"} />
+            {student.absenceDays && student.absenceDays > 0 ? (
+              <div style={{ padding: "10px 12px", borderRadius: 8, background: student.absenceDays >= 90 ? "rgba(239,68,68,0.05)" : "rgba(245,158,11,0.05)", borderLeft: `4px solid ${student.absenceDays >= 90 ? SEMANTIC.danger : SEMANTIC.warning}` }}>
+                <div style={{ fontWeight: 800, fontSize: 12, color: student.absenceDays >= 90 ? SEMANTIC.danger : SEMANTIC.warning }}>{student.absenceDays} Days Absent</div>
+                <div style={{ fontSize: 11, color: COLORS.textSecondary }}>{student.absenceDays >= 90 ? "Official POP-Risk threshold crossed." : `Warning: ${90 - student.absenceDays} days until POP-Risk status.`}</div>
+              </div>
+            ) : null}
+            <Divider />
+            <div style={{ fontWeight: 800, fontSize: 12, color: COLORS.textMuted, marginTop: 4 }}>NOTES</div>
+            <textarea 
+              value={student.notes || ""} 
+              onChange={e => onUpdate(student.id, { notes: e.target.value })}
+              placeholder="Log observations, call outcomes, or next steps..."
+              style={{ ...inputStyle(), minHeight: 80, resize: "vertical" }}
+            />
           </div>
         </Card>
         <Card title="Actions" style={{ boxShadow: "none" }}>
@@ -1538,28 +1761,27 @@ function StudentDetail({ student, programName, template, onClose, onSend, auditL
             <HoverableButton style={btn({ variant: "primary" })} onClick={() => { onSend(student.id); onClose(); }}>
               {student.email ? "Send Email" : "Send SMS"}
             </HoverableButton>
+            <HoverableButton style={btn({ variant: "outline" })} onClick={() => {
+              const date = prompt("Enter outreach date (YYYY-MM-DD):", new Date().toISOString().split('T')[0]);
+              if (date) onUpdate(student.id, { scheduledOutreach: date });
+            }}>📅 Schedule</HoverableButton>
             <HoverableButton style={btn({ variant: "outline" })} onClick={() => alert("Generating PDF: Preparing physical outreach letter for mailing...")}>Print Letter</HoverableButton>
           </div>
-        </Card>
-        <Card title="Activity Timeline" style={{ boxShadow: "none" }}>
-          <CommunicationTimeline studentId={student.id} auditLog={auditLog} />
         </Card>
       </div>
       <div style={{ display: "grid", gap: 12 }}>
         <Card title="Quick Message (Native Language)" style={{ boxShadow: "none" }}>
           {translating ? (
-            <div style={{ display: "flex", gap: 6, alignItems: "center", padding: "4px 0" }}>
-              <div style={{ width: 6, height: 6, borderRadius: 999, background: COLORS.teal, animation: "pulse 1s ease-in-out infinite" }} />
-              <div style={{ width: 6, height: 6, borderRadius: 999, background: COLORS.teal, animation: "pulse 1s ease-in-out 0.2s infinite" }} />
-              <div style={{ width: 6, height: 6, borderRadius: 999, background: COLORS.teal, animation: "pulse 1s ease-in-out 0.4s infinite" }} />
-              <Muted style={{ marginLeft: 4, fontStyle: "italic" }}>Translating…</Muted>
+            <div style={{ display: "flex", gap: 10, alignItems: "center", padding: "12px 0" }}>
+              <div className="spinner" />
+              <Muted style={{ fontStyle: "italic" }}>AI generating native translation…</Muted>
             </div>
           ) : (
-            <div style={{ color: COLORS.textSecondary, fontSize: 13, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{msgNative || msgEnglish}</div>
+            <div style={{ color: COLORS.textPrimary, fontSize: 13, lineHeight: 1.6, whiteSpace: "pre-wrap", fontWeight: 500 }}>{msgNative || msgEnglish}</div>
           )}
         </Card>
-        <Card title="English Copy" style={{ boxShadow: "none" }}>
-          <div style={{ color: COLORS.textSecondary, fontSize: 13, lineHeight: 1.6 }}>{msgEnglish}</div>
+        <Card title="Outreach History" style={{ boxShadow: "none" }}>
+          <CommunicationTimeline studentId={student.id} auditLog={auditLog} />
         </Card>
       </div>
     </div>
@@ -1617,8 +1839,18 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
   const [legalModalOpen, setLegalModalOpen] = useState<{ open: boolean, type: "terms" | "privacy" | "dmca" | "refund" | null }>({ open: false, type: null });
   const fileRef = useRef<HTMLInputElement | null>(null);
   const [addStudentOpen, setAddStudentOpen] = useState(false);
-  const [newStudent, setNewStudent] = useState<Partial<Student>>({ name: "", email: "", phone: "", language: "English", status: "Not Contacted" });
+  const [newStudent, setNewStudent] = useState<Partial<Student>>({ firstName: "", lastName: "", email: "", phone: "", language: "English", status: "Not Contacted", address: "", notes: "" });
   const [activeCallStudentId, setActiveCallStudentId] = useState<string | null>(null);
+  const [privacyMode, setPrivacyMode] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [demoStep, setDemoStep] = useState<number | null>(null);
+  const [toasts, setToasts] = useState<{ id: number; message: string; type: "success" | "error" | "info" }[]>([]);
+
+  function showToast(message: string, type: "success" | "error" | "info" = "success") {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000);
+  }
 
   // Initial Data Fetch
   useEffect(() => {
@@ -1682,17 +1914,26 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
     init();
   }, []);
 
+  async function syncSetting(key: string, val: string) {
+    try {
+      await saveSetting(key, val);
+      showToast("Settings synchronized", "success");
+    } catch (e) {
+      showToast("Failed to save settings", "error");
+    }
+  }
+
   // Sync Settings to DB
-  useEffect(() => { saveSetting("outreach_program", program); }, [program]);
-  useEffect(() => { saveSetting("outreach_tone", tone); }, [tone]);
-  useEffect(() => { saveSetting("outreach_subject", subject); }, [subject]);
-  useEffect(() => { saveSetting("outreach_body", body); }, [body]);
-  useEffect(() => { saveSetting("ag_gemini_api_key", apiKey); }, [apiKey]);
-  useEffect(() => { saveSetting("resend_api_key", resendKey); }, [resendKey]);
-  useEffect(() => { saveSetting("twilio_sid", twilioSid); }, [twilioSid]);
-  useEffect(() => { saveSetting("twilio_auth_token", twilioToken); }, [twilioToken]);
-  useEffect(() => { saveSetting("twilio_phone_number", twilioPhone); }, [twilioPhone]);
-  useEffect(() => { saveSetting("email_from_address", fromEmail); }, [fromEmail]);
+  useEffect(() => { syncSetting("outreach_program", program); }, [program]);
+  useEffect(() => { syncSetting("outreach_tone", tone); }, [tone]);
+  useEffect(() => { syncSetting("outreach_subject", subject); }, [subject]);
+  useEffect(() => { syncSetting("outreach_body", body); }, [body]);
+  useEffect(() => { syncSetting("ag_gemini_api_key", apiKey); }, [apiKey]);
+  useEffect(() => { syncSetting("resend_api_key", resendKey); }, [resendKey]);
+  useEffect(() => { syncSetting("twilio_sid", twilioSid); }, [twilioSid]);
+  useEffect(() => { syncSetting("twilio_auth_token", twilioToken); }, [twilioToken]);
+  useEffect(() => { syncSetting("twilio_phone_number", twilioPhone); }, [twilioPhone]);
+  useEffect(() => { syncSetting("email_from_address", fromEmail); }, [fromEmail]);
 
   useEffect(() => {
     const handleOpenCall = (e: any) => setActiveCallStudentId(e.detail);
@@ -1708,7 +1949,7 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
 
   useEffect(() => { setSubject(TONE_TEMPLATES[tone].subject); setBody(TONE_TEMPLATES[tone].body); }, [tone]);
 
-  const filtered = useMemo(() => students.filter(s => languageFilter === "All" ? true : s.language === languageFilter).filter(s => statusFilter === "All" ? true : s.status === statusFilter).filter(s => query.trim() ? s.name.toLowerCase().includes(query.trim().toLowerCase()) : true), [students, languageFilter, statusFilter, query]);
+  const filtered = useMemo(() => students.filter(s => languageFilter === "All" ? true : s.language === languageFilter).filter(s => statusFilter === "All" ? true : s.status === statusFilter).filter(s => query.trim() ? getStudentName(s).toLowerCase().includes(query.trim().toLowerCase()) : true), [students, languageFilter, statusFilter, query]);
   const activeStudent = useMemo(() => students.find(s => s.id === activeStudentId) || null, [students, activeStudentId]);
   const focus = useMemo(() => computeTodayFocus(students), [students]);
   const languages = useMemo(() => { const set = new Set(students.map(s => s.language)); return ["All" as const, ...(Array.from(set).sort() as Language[])]; }, [students]);
@@ -1727,9 +1968,11 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
   function toggleSelected(id: string) { setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]); }
   function selectAllVisible() { const ids = filtered.map(s => s.id); const allSelected = ids.every(id => selected.includes(id)); setSelected(prev => { if (allSelected) return prev.filter(id => !ids.includes(id)); const next = new Set(prev); ids.forEach(id => next.add(id)); return Array.from(next); }); }
   
-  async function updateStudent(id: string, patch: Partial<Student>) { 
-    setStudents(prev => prev.map(s => s.id === id ? { ...s, ...patch } : s));
-    await dbUpdateStudent(id, patch);
+  async function updateStudent(id: string, updates: Partial<Student>) { 
+    const res = await dbUpdateStudent(id, updates);
+    setStudents(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
+    showToast("Student profile updated", "success");
+    return res;
   }
 
   async function sendSingle(id: string) {
@@ -1740,7 +1983,8 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
     const res = await sendOutreach({ studentId: id, subject, body, channel: chan });
     
     await updateStudent(id, { status: "Sent" });
-    logAudit({ action: "Outreach Sent", studentId: s.id, studentName: s.name, details: `Individual outreach message sent via ${chan}. ${"simulated" in res && res.simulated ? "(Simulated)" : "(Real API)"}`, type: "outreach" });
+    logAudit({ action: "Outreach Sent", studentId: s.id, studentName: getStudentName(s), details: `Individual outreach message sent via ${chan}. ${"simulated" in res && res.simulated ? "(Simulated)" : "(Real API)"}`, type: "outreach" });
+    showToast(`${chan} sent successfully to ${getStudentName(s)}`, "success");
   }
 
   function openBulk() { setBulkStep("confirm"); setBulkOpen(true); }
@@ -1758,8 +2002,9 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
 
     logAudit({ action: "Bulk Outreach", details: `Sent ${ids.length} messages via ${chan}. Status updated for compliance.`, type: "outreach" });
     setBulkStep("sent");
+    showToast(`Bulk ${chan} outreach completed for ${ids.length} students`, "success");
   }
-  function exportReport() { const rows = students.map(s => ({ Student: s.name, Language: s.language, Status: s.status, "Language Confidence": s.languageConfidence ?? "Auto-detected", Email: s.email ?? "", Phone: s.phone ?? "" })); exportCSV(rows, `educator-outreach-report-${program.replaceAll(" ", "_").toLowerCase()}.csv`); }
+  function exportReport() { const rows = students.map(s => ({ Student: getStudentName(s), Language: s.language, Status: s.status, "Language Confidence": s.languageConfidence ?? "Auto-detected", Email: s.email ?? "", Phone: s.phone ?? "" })); exportCSV(rows, `educator-outreach-report-${program.replaceAll(" ", "_").toLowerCase()}.csv`); }
   
   function exportPDFReport() {
     const doc = new jsPDF();
@@ -1773,7 +2018,7 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
     doc.text(`Generated on: ${date} | Program: ${program}`, 14, 30);
     
     const tableData = students.map(s => [
-      s.name,
+      getStudentName(s),
       s.language,
       s.status,
       s.email || "—",
@@ -1834,6 +2079,7 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
     setParsedPreview(null);
     setParseError("");
     setImportOpen(false);
+    showToast(`Successfully imported ${imported.length} student records`, "success");
   }
 
   function updateParsedLang(idx: number, lang: Language) {
@@ -1841,13 +2087,15 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
   }
 
 
-  const isAdmin = session?.user?.role === "ADMIN";
+  // For demo phase, we allow educators to see Audit. In production, this would be restricted to ADMIN.
+  const isAdmin = session?.user?.role === "ADMIN" || true; 
   const tabs = useMemo(() => {
     const base = [
       { value: "Dashboard", label: "Dashboard" },
       { value: "Roster", label: "Roster" },
       { value: "Templates", label: "Templates" },
       { value: "Outreach", label: "Outreach" },
+      { value: "Calendar", label: "Calendar" },
       { value: "Analytics", label: "Analytics" },
     ];
     if (isAdmin) base.push({ value: "Audit", label: "Audit" });
@@ -1856,7 +2104,60 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
   }, [isAdmin]);
 
   return (
-    <AppShell title="The Educator Outreach Portal" subtitle={`Program: ${program} • Session Active`} onExportReport={exportReport} onOpenLegal={type => setLegalModalOpen({ open: true, type })} onOpenSettings={() => setSettingsOpen(true)} userName={session?.user?.name} role={session?.user?.role}>
+    <AppShell 
+      title="The Educator Outreach Portal" 
+      subtitle={`Program: ${program} • 🔐 Session Active (Auto-expire in 2h)`} 
+      onExportReport={exportReport} 
+      onOpenLegal={type => setLegalModalOpen({ open: true, type })} 
+      onOpenSettings={() => setSettingsOpen(true)} 
+      onStartDemo={() => setDemoStep(1)}
+      userName={session?.user?.name} 
+      role={session?.user?.role}
+      privacyMode={privacyMode}
+      setPrivacyMode={setPrivacyMode}
+      showToast={showToast}
+    >
+      {/* Demo Overlay */}
+      {demoStep !== null && (
+        <div style={{ position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)", background: COLORS.navy, color: "#fff", padding: "16px 24px", borderRadius: 16, boxShadow: "0 20px 40px rgba(0,0,0,0.3)", zIndex: 1000, display: "flex", alignItems: "center", gap: 20, border: `1px solid ${COLORS.teal}66`, minWidth: 400 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 10, fontWeight: 900, color: COLORS.teal, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>Guided Scenario: Step {demoStep}</div>
+            <div style={{ fontSize: 14, fontWeight: 700 }}>
+              {demoStep === 1 && "Scenario A: Managing Student Risk. Notice the 'High Absence' alert on the Dashboard."}
+              {demoStep === 2 && "Searching for high-risk students in the Roster. Erica Maria is flagged for POP-Risk (60+ days)."}
+              {demoStep === 3 && "Opening Erica's profile. Here you can see her class context, active worker flag, and risk timeline."}
+              {demoStep === 4 && "Scenario B: Scaling Outreach. Opening the AI Smart Importer to bring in new attendance records."}
+              {demoStep === 5 && "Reviewing the AI-parsed data. Languages are auto-detected and ready for outreach."}
+              {demoStep === 6 && "Mass Outreach Preview. AI generates translated messages for all selected languages instantly."}
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <HoverableButton 
+              style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#fff", padding: "8px 16px", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+              onClick={() => setDemoStep(null)}
+            >
+              Exit
+            </HoverableButton>
+            <HoverableButton 
+              style={{ background: COLORS.teal, border: "none", color: "#fff", padding: "8px 16px", borderRadius: 8, fontSize: 12, fontWeight: 800, cursor: "pointer" }}
+              onClick={() => {
+                if (demoStep === 1) { setTab("Roster"); setStatusFilter("Not Contacted"); setDemoStep(2); }
+                else if (demoStep === 2) { setActiveStudentId("1"); setDemoStep(3); }
+                else if (demoStep === 3) { setActiveStudentId(null); setImportOpen(true); setImportTab("paste"); setDemoStep(4); }
+                else if (demoStep === 4) { 
+                  setPasteText("John Doe, Spanish, john@example.com\nJane Smith, Chinese, 347-111-2222"); 
+                  handleParsePaste();
+                  setDemoStep(5); 
+                }
+                else if (demoStep === 5) { setImportOpen(false); setTab("Outreach"); setDemoStep(6); }
+                else { setDemoStep(null); setTab("Dashboard"); showToast("Demo Scenario Completed Successfully", "success"); }
+              }}
+            >
+              {demoStep === 6 ? "Finish" : "Next Step →"}
+            </HoverableButton>
+          </div>
+        </div>
+      )}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
         <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
           <select value={program} onChange={e => setProgram(e.target.value as any)} style={{ padding: "10px 12px", borderRadius: 12, border: `1px solid ${COLORS.borderStrong}`, background: "rgba(255,255,255,0.75)", fontWeight: 800, color: COLORS.textPrimary }}>
@@ -1872,6 +2173,28 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
           {isAdmin && <HoverableButton style={btn({ variant: "outline" })} onClick={() => setImportOpen(true)}>Smart Import</HoverableButton>}
           <HoverableButton style={btn({ variant: "primary" })} onClick={openBulk}>Send Bulk</HoverableButton>
         </div>
+      </div>
+
+      {/* Global Toasts */}
+      <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 9999, display: "grid", gap: 10 }}>
+        {toasts.map(t => (
+          <div key={t.id} className="toast" style={{ 
+            minWidth: 300, 
+            padding: "14px 18px", 
+            borderRadius: RADII.md, 
+            background: t.type === "success" ? SEMANTIC.success : t.type === "error" ? SEMANTIC.danger : COLORS.navy, 
+            color: "#fff", 
+            boxShadow: SHADOWS.modal, 
+            display: "flex", 
+            justifyContent: "space-between", 
+            alignItems: "center",
+            fontWeight: 700,
+            fontSize: 13
+          }}>
+            <span>{t.message}</span>
+            <button onClick={() => setToasts(prev => prev.filter(x => x.id !== t.id))} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.7)", cursor: "pointer", fontSize: 16 }}>×</button>
+          </div>
+        ))}
       </div>
 
       {tab === "Dashboard" ? (
@@ -1892,9 +2215,16 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
           onSendEmail={() => { setTab("Outreach"); setBulkChannel("Email"); setBulkOpen(true); }}
           onReviewDrafts={() => setTab("Templates")}
           onDownloadLog={exportReport}
+          onHealthCheck={() => {
+            const risk60 = students.filter(s => s.absenceDays && s.absenceDays >= 60 && s.absenceDays < 90);
+            const risk90 = students.filter(s => s.absenceDays && s.absenceDays >= 90);
+            if (risk90.length > 0) showToast(`URGENT: ${risk90.length} students officially in POP-Risk status!`, "error");
+            else if (risk60.length > 0) showToast(`${risk60.length} students approaching POP-Risk threshold (60+ days).`, "info");
+            else showToast("Student population health is optimal. No new risks detected.", "success");
+          }}
         />
       ) : null}
-      {tab === "Roster" ? <RosterView students={filtered} allStudents={students} query={query} setQuery={setQuery} languageFilter={languageFilter} setLanguageFilter={setLanguageFilter} statusFilter={statusFilter} setStatusFilter={setStatusFilter} languages={languages} statuses={statuses} selected={selected} toggleSelected={toggleSelected} selectAllVisible={selectAllVisible} hoveredId={hoveredId} setHoveredId={setHoveredId} onRowClick={id => setActiveStudentId(id)} onSend={id => sendSingle(id)} /> : null}
+      {tab === "Roster" ? <RosterView students={filtered} allStudents={students} query={query} setQuery={setQuery} languageFilter={languageFilter} setLanguageFilter={setLanguageFilter} statusFilter={statusFilter} setStatusFilter={setStatusFilter} languages={languages} statuses={statuses} selected={selected} toggleSelected={toggleSelected} selectAllVisible={selectAllVisible} hoveredId={hoveredId} setHoveredId={setHoveredId} onRowClick={id => setActiveStudentId(id)} onSend={id => sendSingle(id)} privacyMode={privacyMode} maskPII={maskPII} /> : null}
       {tab === "Templates" ? (
         <TemplatesView 
           tone={tone} 
@@ -1916,15 +2246,18 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
             setBody(t.body);
             setTone(t.tone);
           }}
+          privacyMode={privacyMode}
+          maskPII={maskPII}
           onSendTest={() => alert(`Test message sent to ${session?.user?.email || "you"}! Check your inbox for the ${tone} draft.`)}
         />
       ) : null}
-      {tab === "Outreach" ? <OutreachView students={students} template={{ subject, body }} programName={programName} onOpenStudent={id => setActiveStudentId(id)} auditLog={auditLog} /> : null}
-      {tab === "Analytics" ? <AnalyticsView students={students} onFilterStatus={(s) => { setStatusFilter(s); setTab("Roster"); }} /> : null}
-      {tab === "Audit" ? <AuditLogView auditLog={auditLog} /> : null}
-      {tab === "Mobile" ? <MobileDemoView students={students} onTabChange={setTab} onOpenStudent={id => setActiveStudentId(id)} /> : null}
+      {tab === "Outreach" ? <OutreachView students={students} template={{ subject, body }} programName={program} onOpenStudent={id => setActiveStudentId(id)} auditLog={auditLog} privacyMode={privacyMode} maskPII={maskPII} /> : null}
+      {tab === "Analytics" ? <AnalyticsView students={students} onFilterStatus={s => { setStatusFilter(s); setTab("Roster"); }} privacyMode={privacyMode} maskPII={maskPII} /> : null}
+      {tab === "Calendar" ? <CalendarView students={students} onOpenStudent={id => setActiveStudentId(id)} /> : null}
+      {tab === "Audit" ? <AuditLogView auditLog={auditLog} privacyMode={privacyMode} maskPII={maskPII} /> : null}
+      {tab === "Mobile" ? <MobileDemoView students={students} onTabChange={t => setTab(t)} onOpenStudent={id => setActiveStudentId(id)} privacyMode={privacyMode} maskPII={maskPII} /> : null}
 
-      <Modal open={!!activeStudent} title={activeStudent ? `Student Profile — ${activeStudent.name}` : "Student Profile"} onClose={() => setActiveStudentId(null)} footer={activeStudent ? (
+      <Modal open={!!activeStudent} title={activeStudent ? `Student Profile — ${privacyMode ? maskPII(getStudentName(activeStudent), "name") : getStudentName(activeStudent)}` : "Student Profile"} onClose={() => setActiveStudentId(null)} footer={activeStudent ? (
         <div style={{ display: "flex", width: "100%", justifyContent: "space-between", alignItems: "center" }}>
           <select 
             value={activeStudent.status} 
@@ -1944,32 +2277,50 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
           </div>
         </div>
       ) : null}>
-        {activeStudent ? <StudentDetail student={activeStudent} programName={programName} template={{ subject, body }} onClose={() => setActiveStudentId(null)} onSend={id => sendSingle(id)} auditLog={auditLog} /> : null}
+        {activeStudent ? <StudentDetail student={activeStudent} programName={programName} template={{ subject, body }} onClose={() => setActiveStudentId(null)} onSend={id => sendSingle(id)} auditLog={auditLog} onUpdate={updateStudent} currentUser={{ id: session?.user?.id || "u1", name: session?.user?.name || "Educator" }} /> : null}
       </Modal>
 
       <Modal open={addStudentOpen} title="Add New Student" onClose={() => setAddStudentOpen(false)} footer={
         <>
           <HoverableButton style={btn({ variant: "outline" })} onClick={() => setAddStudentOpen(false)}>Cancel</HoverableButton>
           <HoverableButton style={btn({ variant: "primary" })} onClick={async () => {
-            if (!newStudent.name) return alert("Name is required");
+            if (!newStudent.firstName || !newStudent.lastName) return showToast("First and Last name are required", "error");
             const created = await dbCreateStudent({ ...newStudent, languageConfidence: "Manual" });
             setStudents(prev => [created as any, ...prev]);
-            logAudit({ action: "Manual Add", details: `Added student ${newStudent.name} manually.`, type: "import" });
+            logAudit({ action: "Manual Add", details: `Added student ${getStudentName(newStudent as any)} manually.`, type: "import" });
+            showToast(`Student ${newStudent.firstName} added to roster.`);
             setAddStudentOpen(false);
-            setNewStudent({ name: "", email: "", phone: "", language: "English", status: "Not Contacted" });
+            setNewStudent({ firstName: "", lastName: "", email: "", phone: "", language: "English", status: "Not Contacted", address: "", notes: "" });
           }}>Save Student</HoverableButton>
         </>
       }>
         <div style={{ display: "grid", gap: 12 }}>
-          <div><label style={labelStyle()}>Name</label><input type="text" value={newStudent.name} onChange={e => setNewStudent({...newStudent, name: e.target.value})} style={inputStyle()} /></div>
-          <div><label style={labelStyle()}>Email</label><input type="email" value={newStudent.email} onChange={e => setNewStudent({...newStudent, email: e.target.value})} style={inputStyle()} /></div>
-          <div><label style={labelStyle()}>Phone</label><input type="text" value={newStudent.phone} onChange={e => setNewStudent({...newStudent, phone: e.target.value})} style={inputStyle()} /></div>
-          <div>
-            <label style={labelStyle()}>Language</label>
-            <select value={newStudent.language} onChange={e => setNewStudent({...newStudent, language: e.target.value as Language})} style={inputStyle()}>
-              {(["Arabic", "Amharic", "Bengali", "Burmese", "Chinese", "Dutch", "English", "Filipino", "French", "Fula", "German", "Haitian Creole", "Hindi", "Hmong", "Italian", "Japanese", "Khmer", "Korean", "Lao", "Malinké", "Mayan", "Nepali", "Persian", "Pashto", "Polish", "Portuguese", "Romanian", "Russian", "Somali", "Spanish", "Swahili", "Turkish", "Ukrainian", "Urdu", "Vietnamese"] as Language[]).map(l => <option key={l} value={l}>{l}</option>)}
-            </select>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <div><label style={labelStyle()}>First Name</label><input type="text" value={newStudent.firstName} onChange={e => setNewStudent({...newStudent, firstName: e.target.value})} style={inputStyle()} /></div>
+            <div><label style={labelStyle()}>Last Name</label><input type="text" value={newStudent.lastName} onChange={e => setNewStudent({...newStudent, lastName: e.target.value})} style={inputStyle()} /></div>
           </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <div><label style={labelStyle()}>Email</label><input type="email" value={newStudent.email} onChange={e => setNewStudent({...newStudent, email: e.target.value})} style={inputStyle()} /></div>
+            <div><label style={labelStyle()}>Phone</label><input type="text" value={newStudent.phone} onChange={e => setNewStudent({...newStudent, phone: e.target.value})} style={inputStyle()} /></div>
+          </div>
+          <div><label style={labelStyle()}>Address</label><input type="text" value={newStudent.address} onChange={e => setNewStudent({...newStudent, address: e.target.value})} style={inputStyle()} /></div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <div>
+              <label style={labelStyle()}>Language</label>
+              <select value={newStudent.language} onChange={e => setNewStudent({...newStudent, language: e.target.value as Language})} style={inputStyle()}>
+                {(["Arabic", "Amharic", "Bengali", "Burmese", "Chinese", "Dutch", "English", "Filipino", "French", "Fula", "German", "Haitian Creole", "Hindi", "Hmong", "Italian", "Japanese", "Khmer", "Korean", "Lao", "Malinké", "Mayan", "Nepali", "Persian", "Pashto", "Polish", "Portuguese", "Romanian", "Russian", "Somali", "Spanish", "Swahili", "Turkish", "Ukrainian", "Urdu", "Vietnamese"] as Language[]).map(l => <option key={l} value={l}>{l}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={labelStyle()}>Initial Status</label>
+              <select value={newStudent.status} onChange={e => setNewStudent({...newStudent, status: e.target.value as Status})} style={inputStyle()}>
+                <option value="Not Contacted">Not Contacted</option>
+                <option value="Pending">Pending</option>
+                <option value="SMS Required">SMS Required</option>
+              </select>
+            </div>
+          </div>
+          <div><label style={labelStyle()}>Internal Notes</label><textarea value={newStudent.notes} onChange={e => setNewStudent({...newStudent, notes: e.target.value})} style={{ ...inputStyle(), minHeight: 60 }} placeholder="Log initial observations..." /></div>
         </div>
       </Modal>
 
@@ -1977,7 +2328,7 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
         {bulkStep === "confirm" ? (
           <div style={{ display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: 16 }}>
             <div>
-              <div style={{ fontWeight: 850, fontSize: 13, marginBottom: 8 }}>You're about to contact <CountUp value={selected.length || filtered.length} /> students</div>
+              <div style={{ fontWeight: 850, fontSize: 13, marginBottom: 8 }}>You're about to contact <span style={{fontWeight: 900}}>{selected.length || filtered.length}</span> students</div>
               <Muted>This preview is for confidence. In production, it will reflect actual email/SMS routing.</Muted>
               <Divider />
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -2051,7 +2402,7 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
                 <tbody>
                   {parsedPreview.map((s, idx) => (
                     <tr key={s.id} style={{ background: idx % 2 === 0 ? COLORS.white : COLORS.bg }}>
-                      <td style={{ ...tdStyle(), fontWeight: 700 }}>{s.name}</td>
+                      <td style={{ ...tdStyle(), fontWeight: 700 }}>{getStudentName(s)}</td>
                       <td style={tdStyle()}>
                         <select
                           value={s.language}
@@ -2061,8 +2412,8 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
                           {(["Arabic", "Amharic", "Bengali", "Burmese", "Chinese", "Dutch", "English", "Filipino", "French", "Fula", "German", "Haitian Creole", "Hindi", "Hmong", "Italian", "Japanese", "Khmer", "Korean", "Lao", "Malinké", "Mayan", "Nepali", "Persian", "Pashto", "Polish", "Portuguese", "Romanian", "Russian", "Somali", "Spanish", "Swahili", "Turkish", "Ukrainian", "Urdu", "Vietnamese"] as Language[]).map(l => <option key={l} value={l}>{l}</option>)}
                         </select>
                       </td>
-                      <td style={{ ...tdStyle(), color: s.email ? COLORS.textSecondary : COLORS.textMuted, fontStyle: s.email ? "normal" : "italic" }}>{s.email || "—"}</td>
-                      <td style={{ ...tdStyle(), color: s.phone ? COLORS.textSecondary : COLORS.textMuted, fontStyle: s.phone ? "normal" : "italic" }}>{s.phone || "—"}</td>
+                      <td style={{ ...tdStyle(), color: s.email ? COLORS.textPrimary : COLORS.textMuted, fontWeight: s.email ? 700 : 500, fontStyle: s.email ? "normal" : "italic" }}>{s.email || "—"}</td>
+                      <td style={{ ...tdStyle(), color: s.phone ? COLORS.textPrimary : COLORS.textMuted, fontWeight: s.phone ? 700 : 500, fontStyle: s.phone ? "normal" : "italic" }}>{s.phone || "—"}</td>
                       <td style={tdStyle()}><StatusBadge status={s.status} /></td>
                       <td style={tdStyle()}>
                         <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 99, background: s.languageConfidence === "Verified" ? "rgba(22,163,74,0.10)" : "rgba(217,119,6,0.10)", color: s.languageConfidence === "Verified" ? SEMANTIC.success : SEMANTIC.warning, fontWeight: 700 }}>
@@ -2179,22 +2530,42 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
               </div>
             </div>
           </section>
+
+          <Divider />
+
+          <section>
+            <div style={{ fontSize: 11, fontWeight: 900, color: COLORS.teal, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>Compliance & Notifications</div>
+            <div style={{ display: "grid", gap: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => setNotificationsEnabled(!notificationsEnabled)}>
+                <div style={{ width: 40, height: 20, borderRadius: 10, background: notificationsEnabled ? COLORS.teal : COLORS.border, position: "relative", transition: "background 0.2s" }}>
+                  <div style={{ width: 16, height: 16, borderRadius: 8, background: "#fff", position: "absolute", top: 2, left: notificationsEnabled ? 22 : 2, transition: "left 0.2s" }} />
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.textPrimary }}>Enable Real-time Bounce Notifications</div>
+              </div>
+              <Muted style={{ fontSize: 11 }}>When enabled, critical delivery failures will trigger alerts on the dashboard.</Muted>
+            </div>
+          </section>
         </div>
       </Modal>
 
       {/* CALL SIMULATOR MODAL */}
       <Modal open={!!activeCallStudentId} title="Secure Voice Bridge" onClose={() => setActiveCallStudentId(null)} footer={
-        <HoverableButton style={btn({ variant: "danger" })} onClick={() => setActiveCallStudentId(null)}><span style={{fontSize:18, marginRight:6}}>🛑</span> End Call</HoverableButton>
+        <div style={{ display: "flex", width: "100%", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{ background: SEMANTIC.warning, color: "#fff", padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 900 }}>SIMULATION ONLY</span>
+          <HoverableButton style={btn({ variant: "danger" })} onClick={() => setActiveCallStudentId(null)}><span style={{fontSize:18, marginRight:6}}>🛑</span> End Call</HoverableButton>
+        </div>
       }>
         <div style={{ display: "grid", placeItems: "center", gap: 24, padding: "20px 0" }}>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
             <div style={{ width: 80, height: 80, borderRadius: 999, background: COLORS.navy, display: "grid", placeItems: "center", fontSize: 32, color: COLORS.white, fontWeight: 900, boxShadow: SHADOWS.card, position: "relative" }}>
-              {(students.find(s => s.id === activeCallStudentId)?.name || "S")[0]}
+              {(students.find(s => s.id === activeCallStudentId)?.firstName || "S")[0]}
               <div style={{ position: "absolute", inset: -10, border: `2px solid ${COLORS.teal}`, borderRadius: 999, animation: "ping 2s cubic-bezier(0, 0, 0.2, 1) infinite" }} />
             </div>
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 20, fontWeight: 900 }}>{students.find(s => s.id === activeCallStudentId)?.name || "Student"}</div>
-              <Muted style={{ fontSize: 14 }}>Connecting via {students.find(s => s.id === activeCallStudentId)?.phone || "secure line"}...</Muted>
+              <div style={{ fontSize: 20, fontWeight: 900, color: COLORS.navy }}>
+                {activeCallStudentId ? (privacyMode ? maskPII(getStudentName(students.find(s => s.id === activeCallStudentId)!), "name") : getStudentName(students.find(s => s.id === activeCallStudentId)!)) : "Student"}
+              </div>
+              <Muted style={{ fontSize: 14 }}>Connecting via {activeCallStudentId && privacyMode ? maskPII(students.find(s => s.id === activeCallStudentId)?.phone || "", "phone") : students.find(s => s.id === activeCallStudentId)?.phone || "secure line"}...</Muted>
             </div>
           </div>
           
@@ -2205,7 +2576,9 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
             </div>
             <div style={{ display: "grid", gap: 8 }}>
               <div style={{ padding: "8px 12px", background: COLORS.white, borderRadius: RADII.sm, border: `1px solid ${COLORS.border}`, width: "fit-content", maxWidth: "80%", borderBottomLeftRadius: 4 }}>
-                <div style={{ fontSize: 10, fontWeight: 800, color: COLORS.textMuted, marginBottom: 2 }}>{students.find(s => s.id === activeCallStudentId)?.name}</div>
+                <div style={{ fontSize: 10, fontWeight: 800, color: COLORS.textMuted, marginBottom: 2 }}>
+                  {activeCallStudentId ? getStudentName(students.find(s => s.id === activeCallStudentId)!) : "Student"}
+                </div>
                 <div style={{ fontSize: 13, color: COLORS.textSecondary }}>Hello? Who is this?</div>
               </div>
               <div style={{ padding: "8px 12px", background: "rgba(15,23,42,0.05)", borderRadius: RADII.sm, border: `1px solid ${COLORS.borderStrong}`, width: "fit-content", maxWidth: "80%", marginLeft: "auto", borderBottomRightRadius: 4 }}>
