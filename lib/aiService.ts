@@ -124,14 +124,14 @@ ${JSON.stringify(students.map(s => ({ id: s.id, name: s.name, status: s.status, 
     return JSON.parse(cleanJson);
   } catch (e) {
     return students.map(s => {
-      const isMissingInfo = !s.email || !s.phone;
-      const isNotContacted = s.status === "Not Contacted";
+      const isCritical = s.status === "Not Contacted";
+      const isWarn = s.status === "Pending" || (!s.email && !s.phone);
       return {
         studentId: s.id,
-        score: isNotContacted ? 75 : isMissingInfo ? 45 : 15,
-        level: isNotContacted ? "High" : isMissingInfo ? "Medium" : "Low",
-        reason: isNotContacted ? "Missing initial contact" : isMissingInfo ? "Incomplete contact profile" : "Healthy engagement",
-        recommendation: isNotContacted ? "Send introductory email" : isMissingInfo ? "Request missing contact info" : "Maintain schedule"
+        score: isCritical ? 85 : isWarn ? 50 : 15,
+        level: isCritical ? "High" : isWarn ? "Medium" : "Low",
+        reason: "Heuristic fallback (data patterns)",
+        recommendation: isCritical ? "Priority outreach" : "Check details"
       };
     });
   }

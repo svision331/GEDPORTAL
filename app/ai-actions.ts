@@ -20,15 +20,24 @@ export async function getRiskAssessment(students: Student[]) {
   if (!apiKey) {
     // Fallback heuristic if no API key
     return students.map(s => {
-      const isMissingInfo = !s.email || !s.phone;
-      const isNotContacted = s.status === "Not Contacted";
-      return {
-        studentId: s.id,
-        score: isNotContacted ? 75 : isMissingInfo ? 45 : 15,
-        level: isNotContacted ? "High" : isMissingInfo ? "Medium" : "Low",
-        reason: isNotContacted ? "Missing initial contact" : isMissingInfo ? "Incomplete contact profile" : "Healthy engagement",
-        recommendation: isNotContacted ? "Send introductory email" : isMissingInfo ? "Request missing contact info" : "Maintain schedule"
-      };
+      let level: "High" | "Medium" | "Low" = "Low";
+      let score = 15;
+      let reason = "Contact history stable";
+      let recommendation = "Maintain schedule";
+
+      if (s.status === "Not Contacted") {
+        level = "High";
+        score = 85;
+        reason = "Initial outreach missing";
+        recommendation = "Send welcome message";
+      } else if (s.status === "Pending" || (!s.email && !!s.phone)) {
+        level = "Medium";
+        score = 45;
+        reason = "Follow-up required / limited contact data";
+        recommendation = "Verify email or call student";
+      }
+
+      return { studentId: s.id, score, level, reason, recommendation };
     }) as RiskAssessment[];
   }
   return await predictRisk(students, apiKey);
