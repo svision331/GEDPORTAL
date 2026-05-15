@@ -2119,16 +2119,17 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
     >
       {/* Demo Overlay */}
       {demoStep !== null && (
-        <div style={{ position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)", background: COLORS.navy, color: "#fff", padding: "16px 24px", borderRadius: 16, boxShadow: "0 20px 40px rgba(0,0,0,0.3)", zIndex: 1000, display: "flex", alignItems: "center", gap: 20, border: `1px solid ${COLORS.teal}66`, minWidth: 400 }}>
+        <div style={{ position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)", background: COLORS.navy, color: "#fff", padding: "16px 24px", borderRadius: 16, boxShadow: "0 20px 40px rgba(0,0,0,0.3)", zIndex: 1000, display: "flex", alignItems: "center", gap: 20, border: `1px solid ${COLORS.teal}66`, minWidth: 450 }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 10, fontWeight: 900, color: COLORS.teal, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>Guided Scenario: Step {demoStep}</div>
-            <div style={{ fontSize: 14, fontWeight: 700 }}>
-              {demoStep === 1 && "Scenario A: Managing Student Risk. Notice the 'High Absence' alert on the Dashboard."}
+            <div style={{ fontSize: 10, fontWeight: 900, color: COLORS.teal, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>Guided Scenario: Step {demoStep} of 7</div>
+            <div style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.5 }}>
+              {demoStep === 1 && "Scenario A: Risk Identification. Notice the 'High Absence' alerts on your Dashboard."}
               {demoStep === 2 && "Searching for high-risk students in the Roster. Erica Maria is flagged for POP-Risk (60+ days)."}
-              {demoStep === 3 && "Opening Erica's profile. Here you can see her class context, active worker flag, and risk timeline."}
-              {demoStep === 4 && "Scenario B: Scaling Outreach. Opening the AI Smart Importer to bring in new attendance records."}
-              {demoStep === 5 && "Reviewing the AI-parsed data. Languages are auto-detected and ready for outreach."}
+              {demoStep === 3 && "Opening Erica's profile. Review her class context, active worker flag, and AI risk timeline."}
+              {demoStep === 4 && "Scenario B: Automation. Using the AI Smart Importer to bring in new attendance records."}
+              {demoStep === 5 && "Reviewing AI parsing. Languages are auto-detected and records are ready for the queue."}
               {demoStep === 6 && "Mass Outreach Preview. AI generates translated messages for all selected languages instantly."}
+              {demoStep === 7 && "Compliance & Logs. Every action is tracked in the Audit Log for state-level reporting."}
             </div>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
@@ -2145,15 +2146,16 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
                 else if (demoStep === 2) { setActiveStudentId("1"); setDemoStep(3); }
                 else if (demoStep === 3) { setActiveStudentId(null); setImportOpen(true); setImportTab("paste"); setDemoStep(4); }
                 else if (demoStep === 4) { 
-                  setPasteText("John Doe, Spanish, john@example.com\nJane Smith, Chinese, 347-111-2222"); 
+                  setPasteText("Garcia\tMaria\tmaria@email.com\t555-1234\tSpanish\nNguyen\tTuan\t\t555-5678\tVietnamese"); 
                   handleParsePaste();
                   setDemoStep(5); 
                 }
                 else if (demoStep === 5) { setImportOpen(false); setTab("Outreach"); setDemoStep(6); }
+                else if (demoStep === 6) { setTab("Audit"); setDemoStep(7); }
                 else { setDemoStep(null); setTab("Dashboard"); showToast("Demo Scenario Completed Successfully", "success"); }
               }}
             >
-              {demoStep === 6 ? "Finish" : "Next Step →"}
+              {demoStep === 7 ? "Finish" : "Next Step →"}
             </HoverableButton>
           </div>
         </div>
