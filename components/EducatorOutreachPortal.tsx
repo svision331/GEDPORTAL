@@ -1187,6 +1187,8 @@ function AnalyticsView({ students }: { students: Student[] }) {
   const responseRate = total ? Math.round((responded / total) * 100) : 0;
   const unreachable = students.filter(s => s.status === "Unreachable" || (!s.email && !s.phone)).length;
   
+  const responseRateTone: "danger" | "warning" | "success" | "neutral" = responseRate === 0 ? "danger" : responseRate < 15 ? "warning" : "success";
+  
   const byLang = useMemo(() => {
     const map = new Map<Language, { total: number; contacted: number }>();
     students.forEach(s => { const cur = map.get(s.language) || { total: 0, contacted: 0 }; cur.total += 1; if (s.status === "Sent" || s.status === "Responded") cur.contacted += 1; map.set(s.language, cur); });
@@ -1196,8 +1198,8 @@ function AnalyticsView({ students }: { students: Student[] }) {
   const chartData = useMemo(() => {
     return byLang.map(([lang, stats]) => ({
       name: lang,
-      Contacted: stats.contacted,
-      Pending: stats.total - stats.contacted,
+      ContactedPct: Math.round((stats.contacted / stats.total) * 100),
+      PendingPct: Math.round(((stats.total - stats.contacted) / stats.total) * 100),
       Total: stats.total
     }));
   }, [byLang]);
@@ -1214,7 +1216,7 @@ function AnalyticsView({ students }: { students: Student[] }) {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
           <Metric title="Total Students" value={total} sub="In scope" />
           <Metric title="Contacted" value={contacted} sub="Sent + Responded" />
-          <Metric title="Response Rate" value={responseRate} sub="Percent responded" />
+          <Metric title="Response Rate" value={responseRate} sub="Percent responded" tone={responseRateTone} />
           <Metric title="Responded" value={responded} sub="Replies received" />
           <Metric title="Unreachable" value={unreachable} sub="Invalid/missing contact" />
         </div>
@@ -1226,11 +1228,15 @@ function AnalyticsView({ students }: { students: Student[] }) {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={COLORS.borderStrong} />
-                <XAxis type="number" />
+                <XAxis type="number" domain={[0, 100]} unit="%" />
                 <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 12, fill: COLORS.textSecondary }} />
-                <Tooltip cursor={{ fill: 'rgba(31,58,95,0.04)' }} contentStyle={{ borderRadius: RADII.md, border: `1px solid ${COLORS.border}`, boxShadow: SHADOWS.card }} />
-                <Bar dataKey="Contacted" stackId="a" fill={COLORS.teal} radius={[0, 0, 0, 0]} />
-                <Bar dataKey="Pending" stackId="a" fill={COLORS.navyLight} radius={[0, 4, 4, 0]} />
+                <Tooltip 
+                  cursor={{ fill: 'rgba(31,58,95,0.04)' }} 
+                  contentStyle={{ borderRadius: RADII.md, border: `1px solid ${COLORS.border}`, boxShadow: SHADOWS.card }}
+                  formatter={(val: number) => [`${val}%`, ""]}
+                />
+                <Bar dataKey="ContactedPct" stackId="a" fill={COLORS.teal} radius={[0, 0, 0, 0]} name="Contacted" />
+                <Bar dataKey="PendingPct" stackId="a" fill={COLORS.navyLight} radius={[0, 4, 4, 0]} name="Pending" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -1249,11 +1255,14 @@ function AnalyticsView({ students }: { students: Student[] }) {
                 <Tooltip contentStyle={{ borderRadius: RADII.md, border: `1px solid ${COLORS.border}`, boxShadow: SHADOWS.card }} />
               </PieChart>
             </ResponsiveContainer>
-            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 10, marginTop: 10 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 16px", marginTop: 10, width: "100%", padding: "0 20px" }}>
               {pieData.map(d => (
-                <div key={d.name} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 700, color: COLORS.textSecondary }}>
-                  <span style={{ width: 8, height: 8, borderRadius: 99, background: STATUS_CONFIG[d.name as Status]?.dot || COLORS.navy }} />
-                  {d.name} ({d.value})
+                <div key={d.name} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6, fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, padding: "4px 8px", borderRadius: 6, background: "rgba(15,23,42,0.02)", border: `1px solid ${COLORS.border}` }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: 99, background: STATUS_CONFIG[d.name as Status]?.dot || COLORS.navy }} />
+                    {d.name}
+                  </div>
+                  <span style={{ color: COLORS.navy }}>{d.value}</span>
                 </div>
               ))}
             </div>

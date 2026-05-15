@@ -19,13 +19,17 @@ export async function getRiskAssessment(students: Student[]) {
   const apiKey = dbKey || process.env.GEMINI_API_KEY || "";
   if (!apiKey) {
     // Fallback heuristic if no API key
-    return students.map(s => ({
-      studentId: s.id,
-      score: s.status === "Not Contacted" ? 75 : 15,
-      level: s.status === "Not Contacted" ? "High" : "Low",
-      reason: "Missing initial contact",
-      recommendation: "Send introductory email"
-    })) as RiskAssessment[];
+    return students.map(s => {
+      const isMissingInfo = !s.email || !s.phone;
+      const isNotContacted = s.status === "Not Contacted";
+      return {
+        studentId: s.id,
+        score: isNotContacted ? 75 : isMissingInfo ? 45 : 15,
+        level: isNotContacted ? "High" : isMissingInfo ? "Medium" : "Low",
+        reason: isNotContacted ? "Missing initial contact" : isMissingInfo ? "Incomplete contact profile" : "Healthy engagement",
+        recommendation: isNotContacted ? "Send introductory email" : isMissingInfo ? "Request missing contact info" : "Maintain schedule"
+      };
+    }) as RiskAssessment[];
   }
   return await predictRisk(students, apiKey);
 }

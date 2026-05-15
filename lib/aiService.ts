@@ -123,12 +123,16 @@ ${JSON.stringify(students.map(s => ({ id: s.id, name: s.name, status: s.status, 
     const cleanJson = textOutput.replace(/^```json\s*/, '').replace(/```\s*$/, '').trim();
     return JSON.parse(cleanJson);
   } catch (e) {
-    return students.map(s => ({
-      studentId: s.id,
-      score: s.status === "Not Contacted" ? 70 : 10,
-      level: s.status === "Not Contacted" ? "High" : "Low",
-      reason: "Heuristic fallback",
-      recommendation: "Review record"
-    }));
+    return students.map(s => {
+      const isMissingInfo = !s.email || !s.phone;
+      const isNotContacted = s.status === "Not Contacted";
+      return {
+        studentId: s.id,
+        score: isNotContacted ? 75 : isMissingInfo ? 45 : 15,
+        level: isNotContacted ? "High" : isMissingInfo ? "Medium" : "Low",
+        reason: isNotContacted ? "Missing initial contact" : isMissingInfo ? "Incomplete contact profile" : "Healthy engagement",
+        recommendation: isNotContacted ? "Send introductory email" : isMissingInfo ? "Request missing contact info" : "Maintain schedule"
+      };
+    });
   }
 }
