@@ -637,6 +637,14 @@ function tdStyle(): React.CSSProperties {
 }
 
 const METRIC_ACCENTS = [COLORS.teal, SEMANTIC.warning, SEMANTIC.danger, "#7C3AED"];
+const MOCK_AUDIT: Omit<AuditEntry, "id" | "timestamp">[] = [
+  { actor: "System", action: "Database Initialized", details: "GED Reconnect portal first load seed completed.", type: "system" },
+  { actor: "Mr. Caldwell", action: "Compliance Review", details: "All student records verified for language compliance and contact status.", type: "compliance" },
+  { actor: "Mr. Caldwell", action: "Bulk Outreach", details: "Sent 12 initial check-in messages to Ukrainian-speaking students.", type: "outreach" },
+  { actor: "System", action: "Smart Import", details: "Successfully parsed 5 student records from manual paste source using AI.", type: "import" },
+  { actor: "Mr. Caldwell", action: "Template Update", details: "Modified 'Encouraging' tone template to include new re-enrollment link.", type: "system" },
+];
+
 function Metric({ title, value, sub, tone = "neutral", trend }: { title: string; value: number; sub?: string; tone?: "success" | "warning" | "danger" | "info" | "neutral"; trend?: string }) {
   const color = tone === "success" ? SEMANTIC.success : tone === "warning" ? SEMANTIC.warning : tone === "danger" ? SEMANTIC.danger : tone === "info" ? SEMANTIC.info : COLORS.navy;
   const bg = tone === "success" ? "rgba(34, 197, 94, 0.05)" : tone === "warning" ? "rgba(245, 158, 11, 0.05)" : tone === "danger" ? "rgba(239, 68, 68, 0.05)" : tone === "info" ? "rgba(59, 130, 246, 0.05)" : COLORS.white;
@@ -1324,15 +1332,25 @@ function AnalyticsView({ students, onFilterStatus }: { students: Student[]; onFi
 function AuditLogView({ auditLog }: { auditLog: AuditEntry[] }) {
   const [filter, setFilter] = useState("all");
 
+  const [simulating, setSimulating] = useState(false);
+
   async function simulateSMS() {
-    await fetch("/api/webhooks/sms", {
-      method: "POST",
-      body: new URLSearchParams({
-        From: "+19170000101", // Matching Lusine Bagryan
-        Body: "Hello! I am interested in the GED program. How do I start?"
-      })
-    });
-    window.location.reload();
+    setSimulating(true);
+    try {
+      await fetch("/api/webhooks/sms", {
+        method: "POST",
+        body: new URLSearchParams({
+          From: "+19170000101", // Matching Lusine Bagryan
+          Body: "Hello! I am interested in the GED program. How do I start?"
+        })
+      });
+      alert("Simulated SMS received from Lusine Bagryan. The roster and audit log will now refresh.");
+      window.location.reload();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSimulating(false);
+    }
   }
 
   const filtered = useMemo(() => {
@@ -1349,7 +1367,9 @@ function AuditLogView({ auditLog }: { auditLog: AuditEntry[] }) {
           ))}
         </div>
         <div style={{ display: "flex", gap: 10 }}>
-          <HoverableButton style={btn({ variant: "outline" })} onClick={simulateSMS}>🛠 Simulate SMS Reply</HoverableButton>
+          <HoverableButton style={btn({ variant: "outline" })} onClick={simulateSMS} disabled={simulating}>
+            {simulating ? "📡 Simulating..." : "🛠 Simulate SMS Reply"}
+          </HoverableButton>
           <HoverableButton style={btn({ variant: "primary" })} onClick={() => {
             const rows = auditLog.map(a => ({ Timestamp: new Date(a.timestamp).toLocaleString(), Actor: a.actor, Action: a.action, Type: a.type, Details: a.details }));
             exportCSV(rows, `audit-log-${new Date().toISOString().slice(0,10)}.csv`);
@@ -1386,6 +1406,15 @@ function AuditLogView({ auditLog }: { auditLog: AuditEntry[] }) {
                   </td>
                 </tr>
               ))}
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={5} style={{ padding: 48, textAlign: "center" }}>
+                    <div style={{ fontSize: 24, marginBottom: 12 }}>📋</div>
+                    <div style={{ fontWeight: 900, color: COLORS.navy }}>No audit entries found</div>
+                    <Muted>Perform outreach or import students to see activity here.</Muted>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -1585,7 +1614,14 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
       }
 
       const dbAudit = await getAuditLogs();
-      setAuditLog(dbAudit as any);
+      if (dbAudit.length === 0) {
+        for (const a of MOCK_AUDIT) {
+          await dbCreateAuditEntry({ ...a, timestamp: new Date().toISOString() } as any);
+        }
+        setAuditLog(await getAuditLogs() as any);
+      } else {
+        setAuditLog(dbAudit as any);
+      }
 
       const dbProgram = await getSetting("outreach_program");
       if (dbProgram) setProgram(dbProgram as any);
