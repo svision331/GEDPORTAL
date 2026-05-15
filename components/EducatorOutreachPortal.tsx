@@ -1371,6 +1371,8 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
   const [fromEmail, setFromEmail] = useState("");
   const [legalModalOpen, setLegalModalOpen] = useState<{ open: boolean, type: "terms" | "privacy" | "dmca" | "refund" | null }>({ open: false, type: null });
   const fileRef = useRef<HTMLInputElement | null>(null);
+  const [addStudentOpen, setAddStudentOpen] = useState(false);
+  const [newStudent, setNewStudent] = useState<Partial<Student>>({ name: "", email: "", phone: "", language: "English", status: "Not Contacted" });
 
   // Initial Data Fetch
   useEffect(() => {
@@ -1601,9 +1603,10 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
           <Segmented value={tab} onChange={v => setTab(v as any)} options={tabs} />
         </div>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <HoverableButton style={btn({ variant: "outline" })} onClick={exportPDFReport}>📄 Export PDF Log</HoverableButton>
+          <HoverableButton style={btn({ variant: "outline" })} onClick={exportPDFReport}>📄 Export PDF</HoverableButton>
+          <HoverableButton style={btn({ variant: "outline" })} onClick={() => setAddStudentOpen(true)}>Add Student</HoverableButton>
           {isAdmin && <HoverableButton style={btn({ variant: "outline" })} onClick={() => setImportOpen(true)}>Smart Import</HoverableButton>}
-          <HoverableButton style={btn({ variant: "primary" })} onClick={openBulk}>Send Bulk Outreach</HoverableButton>
+          <HoverableButton style={btn({ variant: "primary" })} onClick={openBulk}>Send Bulk</HoverableButton>
         </div>
       </div>
 
@@ -1655,6 +1658,32 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
         </div>
       ) : null}>
         {activeStudent ? <StudentDetail student={activeStudent} programName={programName} template={{ subject, body }} onClose={() => setActiveStudentId(null)} onSend={id => sendSingle(id)} auditLog={auditLog} /> : null}
+      </Modal>
+
+      <Modal open={addStudentOpen} title="Add New Student" onClose={() => setAddStudentOpen(false)} footer={
+        <>
+          <HoverableButton style={btn({ variant: "outline" })} onClick={() => setAddStudentOpen(false)}>Cancel</HoverableButton>
+          <HoverableButton style={btn({ variant: "primary" })} onClick={async () => {
+            if (!newStudent.name) return alert("Name is required");
+            const created = await dbCreateStudent({ ...newStudent, languageConfidence: "Manual" });
+            setStudents(prev => [created as any, ...prev]);
+            logAudit({ action: "Manual Add", details: `Added student ${newStudent.name} manually.`, type: "import" });
+            setAddStudentOpen(false);
+            setNewStudent({ name: "", email: "", phone: "", language: "English", status: "Not Contacted" });
+          }}>Save Student</HoverableButton>
+        </>
+      }>
+        <div style={{ display: "grid", gap: 12 }}>
+          <div><label style={labelStyle()}>Name</label><input type="text" value={newStudent.name} onChange={e => setNewStudent({...newStudent, name: e.target.value})} style={inputStyle()} /></div>
+          <div><label style={labelStyle()}>Email</label><input type="email" value={newStudent.email} onChange={e => setNewStudent({...newStudent, email: e.target.value})} style={inputStyle()} /></div>
+          <div><label style={labelStyle()}>Phone</label><input type="text" value={newStudent.phone} onChange={e => setNewStudent({...newStudent, phone: e.target.value})} style={inputStyle()} /></div>
+          <div>
+            <label style={labelStyle()}>Language</label>
+            <select value={newStudent.language} onChange={e => setNewStudent({...newStudent, language: e.target.value as Language})} style={inputStyle()}>
+              {(["Arabic", "Amharic", "Bengali", "Burmese", "Chinese", "Dutch", "English", "Filipino", "French", "Fula", "German", "Haitian Creole", "Hindi", "Hmong", "Italian", "Japanese", "Khmer", "Korean", "Lao", "Malinké", "Mayan", "Nepali", "Persian", "Pashto", "Polish", "Portuguese", "Romanian", "Russian", "Somali", "Spanish", "Swahili", "Turkish", "Ukrainian", "Urdu", "Vietnamese"] as Language[]).map(l => <option key={l} value={l}>{l}</option>)}
+            </select>
+          </div>
+        </div>
       </Modal>
 
       <Modal open={bulkOpen} title="Bulk Outreach" onClose={() => setBulkOpen(false)} footer={bulkStep === "confirm" ? (<><HoverableButton style={btn({ variant: "outline" })} onClick={() => setBulkOpen(false)}>Cancel</HoverableButton><HoverableButton style={btn({ variant: "primary" })} onClick={doBulkSend}>Send Now</HoverableButton></>) : (<><HoverableButton style={btn({ variant: "outline" })} onClick={() => exportReport()}>Download Report</HoverableButton><HoverableButton style={btn({ variant: "primary" })} onClick={() => setBulkOpen(false)}>Continue</HoverableButton></>)}>
