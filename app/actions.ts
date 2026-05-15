@@ -3,7 +3,12 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { sendRealEmail, sendRealSMS } from "@/lib/comms";
-import { Student, Language } from "@/components/EducatorOutreachPortal";
+import {
+  StudentCreateSchema,
+  StudentUpdateSchema,
+  AuditEntrySchema,
+  SendOutreachSchema,
+} from "@/lib/schemas";
 
 function isAdmin(session: Awaited<ReturnType<typeof auth>>): boolean {
   return (session?.user as any)?.role === "ADMIN";
@@ -20,22 +25,34 @@ export async function getStudents() {
   }
 }
 
-export async function updateStudent(id: string, data: any) {
+export async function updateStudent(id: string, data: unknown) {
+  const parsed = StudentUpdateSchema.safeParse(data);
+  if (!parsed.success) {
+    throw new Error(`Invalid student data: ${parsed.error.message}`);
+  }
   return await prisma.student.update({
     where: { id },
-    data,
+    data: parsed.data,
   });
 }
 
-export async function createStudent(data: any) {
+export async function createStudent(data: unknown) {
+  const parsed = StudentCreateSchema.safeParse(data);
+  if (!parsed.success) {
+    throw new Error(`Invalid student data: ${parsed.error.message}`);
+  }
   return await prisma.student.create({
-    data,
+    data: parsed.data,
   });
 }
 
-export async function createAuditEntry(data: any) {
+export async function createAuditEntry(data: unknown) {
+  const parsed = AuditEntrySchema.safeParse(data);
+  if (!parsed.success) {
+    throw new Error(`Invalid audit entry: ${parsed.error.message}`);
+  }
   return await prisma.auditEntry.create({
-    data,
+    data: parsed.data,
   });
 }
 
@@ -78,7 +95,13 @@ export async function getSetting(id: string) {
   }
 }
 
-export async function sendOutreach({ studentId, subject, body, channel }: { studentId: string; subject: string; body: string; channel: "Email" | "SMS" }) {
+export async function sendOutreach(input: unknown) {
+  const parsed = SendOutreachSchema.safeParse(input);
+  if (!parsed.success) {
+    throw new Error(`Invalid outreach data: ${parsed.error.message}`);
+  }
+  const { studentId, subject, body, channel } = parsed.data;
+
   const student = await prisma.student.findUnique({ where: { id: studentId } });
   if (!student) throw new Error("Student not found");
 
@@ -91,7 +114,7 @@ export async function sendOutreach({ studentId, subject, body, channel }: { stud
 
   await prisma.student.update({
     where: { id: studentId },
-    data: { status: channel === "SMS" ? "SMS Required" : "Sent" }
+    data: { status: channel === "SMS" ? "SMS Required" : "Sent" },
   });
 
   return { success: true, ...result };

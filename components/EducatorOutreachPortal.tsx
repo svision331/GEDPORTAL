@@ -2037,7 +2037,7 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
     
     doc.save(`outreach-report-${program.toLowerCase().replace(/ /g, '-')}.pdf`);
   }
-  function handleImport(file: File) { const extra: Student[] = [{ id: String(Date.now()), name: "SAVCHENKO, ANDRII", language: "Ukrainian", status: "Not Contacted", languageConfidence: "Auto-detected", phone: "" }, { id: String(Date.now() + 1), name: "CHEN, MAXINE LU", language: "Chinese", status: "Not Contacted", languageConfidence: "Auto-detected", email: "" }, { id: String(Date.now() + 2), name: "MORA, RICHARD", language: "Spanish", status: "Not Contacted", languageConfidence: "Auto-detected", email: "richard@example.com" }]; setStudents(prev => [...extra, ...prev]); setImportOpen(false); }
+  function handleImport(file: File) { const extra: Student[] = [{ id: String(Date.now()), firstName: "Andrii", lastName: "Savchenko", language: "Ukrainian", status: "Not Contacted", languageConfidence: "Auto-detected", phone: "" }, { id: String(Date.now() + 1), firstName: "Maxine", lastName: "Chen", language: "Chinese", status: "Not Contacted", languageConfidence: "Auto-detected", email: "" }, { id: String(Date.now() + 2), firstName: "Richard", lastName: "Mora", language: "Spanish", status: "Not Contacted", languageConfidence: "Auto-detected", email: "richard@example.com" }]; setStudents(prev => [...extra, ...prev]); setImportOpen(false); }
   const [importTab, setImportTab] = useState<"paste" | "file">("paste");
   const [pasteText, setPasteText] = useState("");
   const [parsedPreview, setParsedPreview] = useState<Student[] | null>(null);

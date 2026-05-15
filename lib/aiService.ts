@@ -124,7 +124,7 @@ Return a JSON array of objects with these keys:
 Do NOT include any markdown formatting or code blocks. Output ONLY the raw JSON array.
 
 Student Data:
-${JSON.stringify(students.map(s => ({ id: s.id, name: s.name, status: s.status, language: s.language, email: !!s.email, phone: !!s.phone })))}`;
+${JSON.stringify(students.map(s => ({ id: s.id, status: s.status, language: s.language, hasEmail: !!s.email, hasPhone: !!s.phone, absenceDays: s.absenceDays ?? 0, isPopRisk: s.isPopRisk ?? false })))}`;
 
   const res = await fetch(url, {
     method: "POST",
