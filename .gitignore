@@ -16,3 +16,10 @@ dist
 ! .env.example
 .vercel
 .env*.local
+
+# SQLite dev databases — never commit
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+prisma/*.db

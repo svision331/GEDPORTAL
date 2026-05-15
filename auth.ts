@@ -36,20 +36,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             }
           }
         } catch (error) {
-          console.error("Database connection failed during auth. Falling back to hardcoded admin.", error);
-        }
-
-        // Fallback if DB fails (e.g. on Vercel without Postgres)
-        if (
-          credentials.email === "admin@gedportal.edu" &&
-          credentials.password === "admin123"
-        ) {
-          return {
-            id: "fallback-admin",
-            email: "admin@gedportal.edu",
-            name: "Admin User",
-            role: "ADMIN",
-          };
+          console.error("Database connection failed during auth.", error);
         }
 
         return null;

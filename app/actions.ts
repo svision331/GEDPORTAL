@@ -1,7 +1,13 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
+import { sendRealEmail, sendRealSMS } from "@/lib/comms";
 import { Student, Language } from "@/components/EducatorOutreachPortal";
+
+function isAdmin(session: Awaited<ReturnType<typeof auth>>): boolean {
+  return (session?.user as any)?.role === "ADMIN";
+}
 
 export async function getStudents() {
   try {
@@ -35,9 +41,8 @@ export async function createAuditEntry(data: any) {
 
 export async function getAuditLogs() {
   const session = await auth();
-  const isAdmin = (session?.user as any)?.role === "ADMIN" || session?.user?.email === "admin@gedportal.edu" || true; // Relaxed for Demo
-  if (!isAdmin) {
-    return []; 
+  if (!isAdmin(session)) {
+    return [];
   }
   try {
     return await prisma.auditEntry.findMany({
@@ -49,13 +54,11 @@ export async function getAuditLogs() {
   }
 }
 
-import { auth } from "@/auth";
-
 export async function saveSetting(id: string, value: string) {
-  // const session = await auth();
-  // if ((session?.user as any)?.role !== "ADMIN") {
-  //   throw new Error("Unauthorized: ADMIN role required for settings change.");
-  // }
+  const session = await auth();
+  if (!isAdmin(session)) {
+    throw new Error("Unauthorized: ADMIN role required for settings change.");
+  }
   return await prisma.setting.upsert({
     where: { id },
     update: { value },
@@ -75,8 +78,6 @@ export async function getSetting(id: string) {
   }
 }
 
-import { sendRealEmail, sendRealSMS } from "@/lib/comms";
-
 export async function sendOutreach({ studentId, subject, body, channel }: { studentId: string; subject: string; body: string; channel: "Email" | "SMS" }) {
   const student = await prisma.student.findUnique({ where: { id: studentId } });
   if (!student) throw new Error("Student not found");
@@ -88,7 +89,6 @@ export async function sendOutreach({ studentId, subject, body, channel }: { stud
     result = await sendRealSMS({ to: student.phone, body });
   }
 
-  // Update status in DB
   await prisma.student.update({
     where: { id: studentId },
     data: { status: channel === "SMS" ? "SMS Required" : "Sent" }

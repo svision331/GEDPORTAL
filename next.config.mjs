@@ -1,7 +1,3 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-  outputFileTracingIncludes: {
-    "/*": ["./dev.db"],
-  },
-};
+const nextConfig = {};
 export default nextConfig;
