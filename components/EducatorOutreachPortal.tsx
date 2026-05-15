@@ -1474,7 +1474,7 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
     const res = await sendOutreach({ studentId: id, subject, body, channel: chan });
     
     await updateStudent(id, { status: "Sent" });
-    logAudit({ action: "Outreach Sent", studentId: s.id, studentName: s.name, details: `Individual outreach message sent via ${chan}. ${res.simulated ? "(Simulated)" : "(Real API)"}`, type: "outreach" });
+    logAudit({ action: "Outreach Sent", studentId: s.id, studentName: s.name, details: `Individual outreach message sent via ${chan}. ${"simulated" in res && res.simulated ? "(Simulated)" : "(Real API)"}`, type: "outreach" });
   }
 
   function openBulk() { setBulkStep("confirm"); setBulkOpen(true); }
