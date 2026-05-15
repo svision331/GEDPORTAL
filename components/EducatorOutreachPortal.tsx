@@ -1071,7 +1071,7 @@ function OutreachView({ students, template, programName, onOpenStudent, auditLog
                 <Muted>Automatically follow up if no response.</Muted>
               </div>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <HoverableButton style={btn({ variant: "ghost", padding: "4px 8px" })} onClick={() => alert("Drip Editor: Change trigger conditions and message delay.")}>Edit</HoverableButton>
+                <HoverableButton style={{ ...btn({ variant: "ghost" }), padding: "4px 8px" }} onClick={() => alert("Drip Editor: Change trigger conditions and message delay.")}>Edit</HoverableButton>
                 <button 
                   onClick={() => setDripActive(!dripActive)}
                   style={{ background: dripActive ? SEMANTIC.success : SEMANTIC.danger, border: "none", borderRadius: 20, padding: "6px 14px", color: "#fff", fontWeight: 800, fontSize: 11, cursor: "pointer", transition: "all 0.2s ease", boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }}
