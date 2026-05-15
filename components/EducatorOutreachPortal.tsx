@@ -1290,7 +1290,7 @@ function StudentDetail({ student, programName, template, onClose, onSend, auditL
         </Card>
         <Card title="Actions" style={{ boxShadow: "none" }}>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-            <HoverableButton style={btn({ variant: "outline" })} onClick={() => alert(`Simulating Phone Call to ${student.phone || 'student'}: Establishing secure connection...`)}>Call Now</HoverableButton>
+            <HoverableButton style={btn({ variant: "outline" })} onClick={() => window.dispatchEvent(new CustomEvent('open-call-simulator', { detail: student.id }))}>Call Now</HoverableButton>
             <HoverableButton style={btn({ variant: "primary" })} onClick={() => { onSend(student.id); onClose(); }}>
               {student.email ? "Send Email" : "Send SMS"}
             </HoverableButton>
@@ -1373,6 +1373,7 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
   const fileRef = useRef<HTMLInputElement | null>(null);
   const [addStudentOpen, setAddStudentOpen] = useState(false);
   const [newStudent, setNewStudent] = useState<Partial<Student>>({ name: "", email: "", phone: "", language: "English", status: "Not Contacted" });
+  const [activeCallStudentId, setActiveCallStudentId] = useState<string | null>(null);
 
   // Initial Data Fetch
   useEffect(() => {
@@ -1435,6 +1436,12 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
   useEffect(() => { saveSetting("twilio_auth_token", twilioToken); }, [twilioToken]);
   useEffect(() => { saveSetting("twilio_phone_number", twilioPhone); }, [twilioPhone]);
   useEffect(() => { saveSetting("email_from_address", fromEmail); }, [fromEmail]);
+
+  useEffect(() => {
+    const handleOpenCall = (e: any) => setActiveCallStudentId(e.detail);
+    window.addEventListener('open-call-simulator', handleOpenCall);
+    return () => window.removeEventListener('open-call-simulator', handleOpenCall);
+  }, []);
 
   const programName = useMemo(() => {
     if (program === "GED Reconnect") return "GED Program";
@@ -1892,6 +1899,48 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
               </div>
             </div>
           </section>
+        </div>
+      </Modal>
+
+      {/* CALL SIMULATOR MODAL */}
+      <Modal open={!!activeCallStudentId} title="Secure Voice Bridge" onClose={() => setActiveCallStudentId(null)} footer={
+        <HoverableButton style={btn({ variant: "danger" })} onClick={() => setActiveCallStudentId(null)}><span style={{fontSize:18, marginRight:6}}>🛑</span> End Call</HoverableButton>
+      }>
+        <div style={{ display: "grid", placeItems: "center", gap: 24, padding: "20px 0" }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 80, height: 80, borderRadius: 999, background: COLORS.navy, display: "grid", placeItems: "center", fontSize: 32, color: COLORS.white, fontWeight: 900, boxShadow: SHADOWS.card, position: "relative" }}>
+              {(students.find(s => s.id === activeCallStudentId)?.name || "S")[0]}
+              <div style={{ position: "absolute", inset: -10, border: `2px solid ${COLORS.teal}`, borderRadius: 999, animation: "ping 2s cubic-bezier(0, 0, 0.2, 1) infinite" }} />
+            </div>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 20, fontWeight: 900 }}>{students.find(s => s.id === activeCallStudentId)?.name || "Student"}</div>
+              <Muted style={{ fontSize: 14 }}>Connecting via {students.find(s => s.id === activeCallStudentId)?.phone || "secure line"}...</Muted>
+            </div>
+          </div>
+          
+          <div style={{ width: "100%", background: COLORS.bg, borderRadius: RADII.md, padding: 16, border: `1px solid ${COLORS.borderStrong}`, display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 700, color: COLORS.textMuted }}>
+              <span>Live Transcript (Simulated)</span>
+              <span style={{ color: COLORS.teal, display: "flex", alignItems: "center", gap: 6 }}><div style={{ width: 6, height: 6, borderRadius: 999, background: COLORS.teal, animation: "pulse 1.5s infinite" }} /> Recording</span>
+            </div>
+            <div style={{ display: "grid", gap: 8 }}>
+              <div style={{ padding: "8px 12px", background: COLORS.white, borderRadius: RADII.sm, border: `1px solid ${COLORS.border}`, width: "fit-content", maxWidth: "80%", borderBottomLeftRadius: 4 }}>
+                <div style={{ fontSize: 10, fontWeight: 800, color: COLORS.textMuted, marginBottom: 2 }}>{students.find(s => s.id === activeCallStudentId)?.name}</div>
+                <div style={{ fontSize: 13, color: COLORS.textSecondary }}>Hello? Who is this?</div>
+              </div>
+              <div style={{ padding: "8px 12px", background: "rgba(15,23,42,0.05)", borderRadius: RADII.sm, border: `1px solid ${COLORS.borderStrong}`, width: "fit-content", maxWidth: "80%", marginLeft: "auto", borderBottomRightRadius: 4 }}>
+                <div style={{ fontSize: 10, fontWeight: 800, color: COLORS.navy, marginBottom: 2 }}>You (Mr. Caldwell)</div>
+                <div style={{ fontSize: 13, color: COLORS.textPrimary }}>Hi, this is Mr. Caldwell from the GED program. I'm calling to see if you needed any help enrolling in classes this semester.</div>
+              </div>
+              <div style={{ fontSize: 12, fontStyle: "italic", color: COLORS.textMuted, textAlign: "center", marginTop: 8 }}>Awaiting response...</div>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 20 }}>
+            <button style={{ width: 50, height: 50, borderRadius: 999, border: `1px solid ${COLORS.borderStrong}`, background: COLORS.white, display: "grid", placeItems: "center", fontSize: 20, cursor: "pointer", color: COLORS.textMuted, boxShadow: SHADOWS.card }}>🎤</button>
+            <button style={{ width: 50, height: 50, borderRadius: 999, border: `1px solid ${COLORS.borderStrong}`, background: COLORS.white, display: "grid", placeItems: "center", fontSize: 20, cursor: "pointer", color: COLORS.textMuted, boxShadow: SHADOWS.card }}>⏸</button>
+            <button style={{ width: 50, height: 50, borderRadius: 999, border: `1px solid ${COLORS.borderStrong}`, background: COLORS.white, display: "grid", placeItems: "center", fontSize: 20, cursor: "pointer", color: COLORS.textMuted, boxShadow: SHADOWS.card }}>⌨️</button>
+          </div>
         </div>
       </Modal>
     </AppShell>
