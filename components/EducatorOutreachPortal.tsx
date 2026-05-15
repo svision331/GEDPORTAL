@@ -1520,7 +1520,7 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
       head: [['Student Name', 'Language', 'Status', 'Email', 'Phone', 'Confidence']],
       body: tableData,
       theme: 'striped',
-      headStyles: { fillStyle: 'F0F4F8', textColor: [31, 58, 95], fontStyle: 'bold' },
+      headStyles: { fillColor: [240, 244, 248], textColor: [31, 58, 95], fontStyle: 'bold' },
       styles: { fontSize: 9 }
     });
     
