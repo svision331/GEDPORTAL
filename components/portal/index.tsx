@@ -279,16 +279,14 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
 
   const isAdmin = session?.user?.role === "ADMIN";
   const tabs = useMemo(() => {
-    const base = [
+    return [
       { value: "Dashboard", label: "Dashboard" },
       { value: "Roster", label: "Roster" },
       { value: "Outreach", label: "Outreach" },
       { value: "Calendar", label: "Calendar" },
-      { value: "Analytics", label: "Analytics" },
+      { value: "Reports", label: "Reports" },
     ];
-    if (isAdmin) base.push({ value: "Audit", label: "Audit" });
-    return base;
-  }, [isAdmin]);
+  }, []);
 
   return (
     <AppShell 
@@ -338,7 +336,7 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
                   setDemoStep(5); 
                 }
                 else if (demoStep === 5) { setImportOpen(false); setTab("Outreach"); setDemoStep(6); }
-                else if (demoStep === 6) { setTab("Audit"); setDemoStep(7); }
+                else if (demoStep === 6) { setTab("Reports"); setDemoStep(7); }
                 else { setDemoStep(null); setTab("Dashboard"); showToast("Demo Scenario Completed Successfully", "success"); }
               }}
             >
@@ -357,10 +355,17 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
           <Segmented value={tab} onChange={v => setTab(v as any)} options={tabs} />
         </div>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <HoverableButton style={btn({ variant: "outline" })} onClick={exportPDFReport}>📄 Export PDF</HoverableButton>
-          <HoverableButton style={btn({ variant: "outline" })} onClick={() => setAddStudentOpen(true)}>Add Student</HoverableButton>
-          {isAdmin && <HoverableButton style={btn({ variant: "outline" })} onClick={() => setImportOpen(true)}>Smart Import</HoverableButton>}
-          <HoverableButton style={btn({ variant: "primary" })} onClick={openBulk}>Send Bulk</HoverableButton>
+          {tab === "Roster" && <>
+            <HoverableButton style={btn({ variant: "outline" })} onClick={() => setAddStudentOpen(true)}>Add Student</HoverableButton>
+            {isAdmin && <HoverableButton style={btn({ variant: "outline" })} onClick={() => setImportOpen(true)}>Smart Import</HoverableButton>}
+            <HoverableButton style={btn({ variant: "primary" })} onClick={openBulk}>Send Bulk</HoverableButton>
+          </>}
+          {tab === "Outreach" && (
+            <HoverableButton style={btn({ variant: "primary" })} onClick={openBulk}>Send Bulk</HoverableButton>
+          )}
+          {tab === "Reports" && (
+            <HoverableButton style={btn({ variant: "outline" })} onClick={exportPDFReport}>📄 Export PDF</HoverableButton>
+          )}
         </div>
       </div>
 
@@ -443,9 +448,8 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
           }}
           onSendTest={() => alert(`Test message sent to ${session?.user?.email || "you"}! Check your inbox for the ${tone} draft.`)}
         /> : null}
-      {tab === "Analytics" ? <AnalyticsView students={students} onFilterStatus={s => { setStatusFilter(s); setTab("Roster"); }} privacyMode={privacyMode} maskPII={maskPII} /> : null}
       {tab === "Calendar" ? <CalendarView students={students} onOpenStudent={id => setActiveStudentId(id)} /> : null}
-      {tab === "Audit" ? <AuditLogView auditLog={auditLog} privacyMode={privacyMode} maskPII={maskPII} /> : null}
+      {tab === "Reports" ? <ReportsView students={students} auditLog={auditLog} onFilterStatus={s => { setStatusFilter(s); setTab("Roster"); }} privacyMode={privacyMode} maskPII={maskPII} isAdmin={isAdmin} onExportPDF={exportPDFReport} onExportCSV={exportReport} /> : null}
       {tab === "Mobile" ? <MobileDemoView students={students} onTabChange={t => setTab(t)} onOpenStudent={id => setActiveStudentId(id)} privacyMode={privacyMode} maskPII={maskPII} /> : null}
 
       <Modal open={!!activeStudent} title={activeStudent ? `Student Profile — ${privacyMode ? maskPII(getStudentName(activeStudent), "name") : getStudentName(activeStudent)}` : "Student Profile"} onClose={() => setActiveStudentId(null)} footer={activeStudent ? (
