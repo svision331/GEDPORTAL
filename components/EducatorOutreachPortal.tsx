@@ -693,7 +693,7 @@ function TopBar({ title, subtitle, onExportReport, onOpenSettings, userName, rol
               <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.textPrimary }}>{userName || "Educator"}</div>
               <div style={{ fontSize: 10, fontWeight: 700, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: "0.05em" }}>{role}</div>
             </div>
-            <HoverableButton onClick={() => signOut()} style={btn({ variant: "ghost", danger: true })}>Log Out</HoverableButton>
+            <HoverableButton onClick={() => signOut()} style={{ ...btn({ variant: "ghost" }), color: "var(--danger)" }}>Log Out</HoverableButton>
           </div>
         </div>
       </div>
