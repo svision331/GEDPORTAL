@@ -128,14 +128,17 @@ function btn({ variant }: { variant: "primary" | "outline" | "ghost" | "teal" | 
   return { ...base, background: "transparent", color: COLORS.textMuted, borderColor: "transparent" };
 }
 
-function HoverableButton({ children, style, onClick }: { children: React.ReactNode; style: React.CSSProperties; onClick?: () => void }) {
+function HoverableButton({ children, style, onClick, disabled }: { children: React.ReactNode; style: React.CSSProperties; onClick?: () => void; disabled?: boolean }) {
   const [hover, setHover] = useState(false);
-  const isGhost = !style.background || style.background === "transparent";
-  return (
-    <button onClick={onClick} style={{ ...style, transform: hover ? "translateY(-2px)" : "translateY(0)", boxShadow: hover && !isGhost ? SHADOWS.hover : style.boxShadow, opacity: hover && isGhost ? 0.7 : 1 }} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
-      {children}
-    </button>
-  );
+  const finalStyle = {
+    ...style,
+    opacity: disabled ? 0.5 : hover ? 0.9 : 1,
+    transform: disabled ? "none" : hover ? "translateY(-1px)" : "none",
+    cursor: disabled ? "not-allowed" : "pointer",
+    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+    boxShadow: disabled ? "none" : hover ? SHADOWS.hover : (style.boxShadow || "none")
+  };
+  return <button onMouseEnter={() => !disabled && setHover(true)} onMouseLeave={() => setHover(false)} onClick={!disabled ? onClick : undefined} style={finalStyle}>{children}</button>;
 }
 
 function StatusBadge({ status }: { status: Status }) {
