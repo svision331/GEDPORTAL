@@ -3,12 +3,22 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { sendRealEmail, sendRealSMS } from "@/lib/comms";
+import { encrypt, decrypt } from "@/lib/crypto";
 import {
   StudentCreateSchema,
   StudentUpdateSchema,
   AuditEntrySchema,
   SendOutreachSchema,
 } from "@/lib/schemas";
+
+// Settings keys that contain sensitive credentials and must be encrypted at rest
+const SENSITIVE_SETTING_KEYS = new Set([
+  "ag_gemini_api_key",
+  "resend_api_key",
+  "twilio_sid",
+  "twilio_auth_token",
+  "twilio_phone_number",
+]);
 
 function isAdmin(session: Awaited<ReturnType<typeof auth>>): boolean {
   return (session?.user as any)?.role === "ADMIN";
@@ -76,10 +86,12 @@ export async function saveSetting(id: string, value: string) {
   if (!isAdmin(session)) {
     throw new Error("Unauthorized: ADMIN role required for settings change.");
   }
+  // Encrypt sensitive credentials before writing to DB
+  const stored = SENSITIVE_SETTING_KEYS.has(id) ? encrypt(value) : value;
   return await prisma.setting.upsert({
     where: { id },
-    update: { value },
-    create: { id, value },
+    update: { value: stored },
+    create: { id, value: stored },
   });
 }
 
@@ -88,7 +100,9 @@ export async function getSetting(id: string) {
     const setting = await prisma.setting.findUnique({
       where: { id },
     });
-    return setting?.value || null;
+    if (!setting?.value) return null;
+    // Decrypt sensitive credentials on read (handles legacy plaintext transparently)
+    return SENSITIVE_SETTING_KEYS.has(id) ? decrypt(setting.value) : setting.value;
   } catch (error) {
     console.error("DB Error getSetting:", error);
     return null;

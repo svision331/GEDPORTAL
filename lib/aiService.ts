@@ -1,4 +1,4 @@
-import { Language, Student } from "@/components/EducatorOutreachPortal";
+import { Language, Student } from "@/components/portal/types";
 
 export async function translateText(text: string, langName: string, langCode: string, apiKey: string): Promise<string> {
   if (!text.trim()) return "";
