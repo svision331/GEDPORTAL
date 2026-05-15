@@ -4,9 +4,14 @@ import { prisma } from "@/lib/prisma";
 import { Student, Language } from "@/components/EducatorOutreachPortal";
 
 export async function getStudents() {
-  return await prisma.student.findMany({
-    orderBy: { createdAt: "desc" },
-  });
+  try {
+    return await prisma.student.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+  } catch (error) {
+    console.error("DB Error getStudents:", error);
+    return [];
+  }
 }
 
 export async function updateStudent(id: string, data: any) {
@@ -33,9 +38,14 @@ export async function getAuditLogs() {
   if ((session?.user as any)?.role !== "ADMIN") {
     return []; // Return empty for non-admins
   }
-  return await prisma.auditEntry.findMany({
-    orderBy: { timestamp: "desc" },
-  });
+  try {
+    return await prisma.auditEntry.findMany({
+      orderBy: { timestamp: "desc" },
+    });
+  } catch (error) {
+    console.error("DB Error getAuditLogs:", error);
+    return [];
+  }
 }
 
 import { auth } from "@/auth";
@@ -53,10 +63,15 @@ export async function saveSetting(id: string, value: string) {
 }
 
 export async function getSetting(id: string) {
-  const setting = await prisma.setting.findUnique({
-    where: { id },
-  });
-  return setting?.value || null;
+  try {
+    const setting = await prisma.setting.findUnique({
+      where: { id },
+    });
+    return setting?.value || null;
+  } catch (error) {
+    console.error("DB Error getSetting:", error);
+    return null;
+  }
 }
 
 import { sendRealEmail, sendRealSMS } from "@/lib/comms";
