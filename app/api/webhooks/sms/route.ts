@@ -36,9 +36,10 @@ export async function POST(req: Request) {
       await prisma.auditEntry.create({
         data: {
           action: "SMS Received",
+          actor: "System (Twilio Webhook)",
           studentId: student.id,
           studentName: student.name,
-          details: `Student replied: "${body}"`,
+          details: `Student replied via SMS: "${body}"`,
           type: "outreach",
           timestamp: new Date(),
         },
