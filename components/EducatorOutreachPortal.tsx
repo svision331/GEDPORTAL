@@ -883,9 +883,9 @@ function RosterView(props: { students: Student[]; allStudents: Student[]; query:
                     </td>
                     <td style={{ ...tdStyle(), textAlign: "right" }} onClick={e => e.stopPropagation()}>
                       <div style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
-                        <HoverableButton style={btn({ variant: "outline", padding: "4px 10px" })} onClick={() => onSend(s.id)}>Send</HoverableButton>
-                        <HoverableButton style={btn({ variant: "outline", padding: "4px 10px" })} onClick={() => window.dispatchEvent(new CustomEvent('open-call-simulator', { detail: s.id }))}>Call</HoverableButton>
-                        <HoverableButton style={btn({ variant: "outline", padding: "4px 10px" })} onClick={() => onRowClick(s.id)}>View</HoverableButton>
+                        <HoverableButton style={{ ...btn({ variant: "outline" }), padding: "4px 10px" }} onClick={() => onSend(s.id)}>Send</HoverableButton>
+                        <HoverableButton style={{ ...btn({ variant: "outline" }), padding: "4px 10px" }} onClick={() => window.dispatchEvent(new CustomEvent('open-call-simulator', { detail: s.id }))}>Call</HoverableButton>
+                        <HoverableButton style={{ ...btn({ variant: "outline" }), padding: "4px 10px" }} onClick={() => onRowClick(s.id)}>View</HoverableButton>
                       </div>
                     </td>
                   </tr>
