@@ -2,19 +2,187 @@
 import React from "react";
 import { COLORS, SEMANTIC, SHADOWS, RADII, STATUS_CONFIG, Student, AuditEntry, Language, Status, TemplateTone, getStudentName } from "./types";
 
+function TranslationCard({ lang, body, onRemove }: { lang: Language; body: string; onRemove: () => void }) {
+  const { translated, loading, error } = useTranslation(body, lang);
+  const accentColor: string = LANG_COLORS[lang]?.fg ?? COLORS.teal;
+  return (
+    <div style={{ border: `1px solid ${COLORS.border}`, borderLeft: `3px solid ${accentColor}`, borderRadius: RADII.md, padding: "12px 14px", background: COLORS.white, boxShadow: SHADOWS.card }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <LanguageTag lang={lang} />
+          {loading && <span style={{ fontSize: 11, color: COLORS.textMuted, fontStyle: "italic" }}>AI Translating…</span>}
+          {error && <span style={{ fontSize: 11, color: SEMANTIC.warning }}>⚠ Fallback to English</span>}
+        </div>
+        <button onClick={onRemove} style={btn({ variant: "ghost" })}>✕</button>
+      </div>
+      <Divider style={{ margin: "10px 0" }} />
+      {loading ? (
+        <div style={{ display: "flex", gap: 6, alignItems: "center", padding: "4px 0" }}>
+          <div style={{ width: 6, height: 6, borderRadius: 999, background: accentColor, animation: "pulse 1s ease-in-out infinite" }} />
+          <div style={{ width: 6, height: 6, borderRadius: 999, background: accentColor, animation: "pulse 1s ease-in-out 0.2s infinite" }} />
+          <div style={{ width: 6, height: 6, borderRadius: 999, background: accentColor, animation: "pulse 1s ease-in-out 0.4s infinite" }} />
+        </div>
+      ) : (
+        <div style={{ fontSize: 13, color: COLORS.textSecondary, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{translated || body}</div>
+      )}
+    </div>
+  );
+}
 
-function OutreachView({ students, template, programName, onOpenStudent, auditLog, privacyMode, maskPII }: { students: Student[]; template: { subject: string; body: string }; programName: string; onOpenStudent: (id: string) => void; auditLog: AuditEntry[]; privacyMode: boolean; maskPII: any }) {
+function OutreachView({
+  students, template, programName, onOpenStudent, auditLog, privacyMode, maskPII,
+  tone, setTone, subject, setSubject, body, setBody,
+  previewLangs, setPreviewLangs, library, onSaveTemplate, onLoadTemplate, onSendTest
+}: {
+  students: Student[];
+  template: { subject: string; body: string };
+  programName: string;
+  onOpenStudent: (id: string) => void;
+  auditLog: AuditEntry[];
+  privacyMode: boolean;
+  maskPII: any;
+  tone: TemplateTone;
+  setTone: (v: TemplateTone) => void;
+  subject: string;
+  setSubject: (v: string) => void;
+  body: string;
+  setBody: (v: string) => void;
+  previewLangs: Language[];
+  setPreviewLangs: (v: Language[]) => void;
+  library: Array<{ name: string; subject: string; body: string; tone: TemplateTone }>;
+  onSaveTemplate: (name: string) => void;
+  onLoadTemplate: (t: any) => void;
+  onSendTest: () => void;
+}) {
   const pending = students.filter(s => s.status === "Not Contacted" || s.status === "Pending");
-  const [dripActive, setDripActive] = useState(false);
+  const [builderOpen, setBuilderOpen] = useState(true);
+
+  const langOptions: Language[] = [
+    "Arabic", "Amharic", "Bengali", "Burmese", "Chinese", "Dutch",
+    "English", "Filipino", "French", "Fula", "German", "Haitian Creole",
+    "Hindi", "Hmong", "Italian", "Japanese", "Khmer", "Korean",
+    "Lao", "Malinké", "Mayan", "Nepali", "Persian", "Pashto",
+    "Polish", "Portuguese", "Romanian", "Russian", "Somali", "Spanish",
+    "Swahili", "Turkish", "Ukrainian", "Urdu", "Vietnamese",
+  ];
+
+  const charCount = body.length;
+  const isSMSCritical = charCount > 160;
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16 }}>
+    <div style={{ display: "grid", gap: 16 }}>
+
+      {/* ── Message Builder (was Templates tab) ── */}
+      <Card
+        title="Message Builder"
+        right={
+          <HoverableButton
+            style={{ ...btn({ variant: "ghost" }), fontSize: 12, padding: "4px 10px" }}
+            onClick={() => setBuilderOpen(v => !v)}
+          >
+            {builderOpen ? "▲ Collapse" : "▼ Expand"}
+          </HoverableButton>
+        }
+        accent={COLORS.teal}
+      >
+        {builderOpen && (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            {/* Left — builder */}
+            <div style={{ display: "grid", gap: 12 }}>
+              {/* Saved templates strip */}
+              {library.length > 0 && (
+                <div>
+                  <label style={labelStyle()}>Saved Templates</label>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }}>
+                    {library.map((t, i) => (
+                      <button key={i} onClick={() => onLoadTemplate(t)} style={{ padding: "6px 12px", borderRadius: RADII.sm, border: `1px solid ${COLORS.border}`, background: COLORS.white, cursor: "pointer", fontSize: 12, fontWeight: 700, color: COLORS.navy }}>
+                        {t.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div>
+                  <label style={labelStyle()}>Tone Preset</label>
+                  <select value={tone} onChange={e => setTone(e.target.value as TemplateTone)} style={inputStyle()}>
+                    <option value="neutral">Neutral / Informational</option>
+                    <option value="encouraging">Encouraging</option>
+                    <option value="urgent">Urgent (Attendance Risk)</option>
+                    <option value="exit">Exit Confirmation</option>
+                  </select>
+                </div>
+                <div style={{ alignSelf: "end" }}>
+                  <HoverableButton style={{ ...btn({ variant: "outline" }), width: "100%" }} onClick={onSendTest}>Send Test to Me</HoverableButton>
+                </div>
+              </div>
+
+              <div>
+                <label style={labelStyle()}>Subject Line</label>
+                <input value={subject} onChange={e => setSubject(e.target.value)} style={inputStyle()} />
+              </div>
+
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                  <label style={labelStyle()}>Message Body (English)</label>
+                  <span style={{ fontSize: 11, fontWeight: 800, color: isSMSCritical ? SEMANTIC.warning : COLORS.textMuted }}>
+                    {charCount} chars {isSMSCritical ? "(>1 SMS unit)" : ""}
+                  </span>
+                </div>
+                <textarea value={body} onChange={e => setBody(e.target.value)} style={{ ...inputStyle(), minHeight: 120, resize: "vertical", lineHeight: 1.5 }} />
+                <Muted style={{ display: "block", marginTop: 6 }}>Tags: {"{Student_Name}"}, {"{Program_Name}"}</Muted>
+              </div>
+
+              <HoverableButton
+                style={{ ...btn({ variant: "outline" }), fontSize: 12 }}
+                onClick={() => { const n = prompt("Template name?"); if (n) onSaveTemplate(n); }}
+              >
+                Save as Template
+              </HoverableButton>
+            </div>
+
+            {/* Right — live translation preview */}
+            <div style={{ display: "grid", gap: 10, alignContent: "start" }}>
+              <div>
+                <label style={labelStyle()}>Live Translation Preview</label>
+                <select
+                  value=""
+                  onChange={e => { const v = e.target.value as Language; if (!v) return; if (!previewLangs.includes(v)) setPreviewLangs([...previewLangs, v]); }}
+                  style={{ ...inputStyle(), marginTop: 6 }}
+                >
+                  <option value="">Add language preview…</option>
+                  {langOptions.filter(l => !previewLangs.includes(l)).map(l => <option key={l} value={l}>{l}</option>)}
+                </select>
+              </div>
+
+              {previewLangs.map(lang => (
+                <TranslationCard key={lang} lang={lang} body={body} onRemove={() => setPreviewLangs(previewLangs.filter(x => x !== lang))} />
+              ))}
+
+              {previewLangs.length === 0 && (
+                <div style={{ textAlign: "center", padding: 24, background: COLORS.bg, borderRadius: RADII.md, border: `1px dashed ${COLORS.borderStrong}` }}>
+                  <Muted>Add a language above to see live AI translations.</Muted>
+                </div>
+              )}
+
+              <div style={{ padding: "8px 12px", borderTop: `1px solid ${COLORS.border}`, display: "flex", gap: 8, alignItems: "flex-start" }}>
+                <Muted style={{ fontSize: 10.5, lineHeight: 1.4, display: "block" }}>
+                  <strong>AI Preview:</strong> Validate all translations for accuracy before sending.
+                </Muted>
+              </div>
+            </div>
+          </div>
+        )}
+      </Card>
+
+      {/* ── Outreach Queue + Stats ── */}
       <div style={{ display: "grid", gridTemplateColumns: "1.3fr 0.7fr", gap: 16 }}>
         <Card title="Outreach Queue">
-          <Muted>Track outreach status with audit-friendly detail. Click any student to view message drafts.</Muted>
+          <Muted>Students needing contact. Click any row to open their profile.</Muted>
           <Divider />
-          <div style={{ overflow: "auto", borderRadius: RADII.md, border: `1px solid ${COLORS.border}`, maxHeight: 400 }}>
-            <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0, minWidth: 600 }}>
+          <div style={{ overflow: "auto", borderRadius: RADII.md, border: `1px solid ${COLORS.border}`, maxHeight: 360 }}>
+            <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0, minWidth: 540 }}>
               <thead style={{ position: "sticky", top: 0, zIndex: 5 }}>
                 <tr style={{ background: "#FAFBFD" }}>
                   <th style={thStyle(true)}>Student</th>
@@ -30,115 +198,67 @@ function OutreachView({ students, template, programName, onOpenStudent, auditLog
                     <td style={tdStyle()}><LanguageTag lang={s.language} /></td>
                     <td style={tdStyle()}><StatusBadge status={s.status} /></td>
                     <td style={tdStyle()}>
-                      <div style={{ color: COLORS.textPrimary, fontSize: 11, fontStyle: "normal", display: "flex", flexDirection: "column" }}>
-                        <div style={{ color: COLORS.textMuted, fontSize: 10, marginBottom: 2 }}>Draft updated: Just now</div>
-                        <div style={{ fontStyle: "italic", fontWeight: 500 }}>{formatTemplate(template.body, s, programName).slice(0, 60)}…</div>
+                      <div style={{ fontSize: 11, fontStyle: "italic", color: COLORS.textSecondary }}>
+                        {formatTemplate(template.body, s, programName).slice(0, 60)}…
                       </div>
                     </td>
                   </tr>
                 ))}
-                {pending.length === 0 ? (
-                  <tr><td colSpan={4} style={{ padding: 18, textAlign: "center" }}><div style={{ fontWeight: 900 }}>You're up to date</div><Muted>No students currently need outreach.</Muted></td></tr>
-                ) : null}
+                {pending.length === 0 && (
+                  <tr><td colSpan={4} style={{ padding: 24, textAlign: "center" }}>
+                    <div style={{ fontWeight: 900 }}>You're up to date</div>
+                    <Muted>No students currently need first contact.</Muted>
+                  </td></tr>
+                )}
               </tbody>
             </table>
           </div>
         </Card>
 
-        <Card title="Automated Workflows (Drip Campaigns)" accent={COLORS.teal}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div style={{ display: "grid", gap: 16, alignContent: "start" }}>
+          <Card title="Engagement Stats" accent={COLORS.navy}>
+            <div style={{ display: "grid", gap: 14 }}>
               <div>
-                <div style={{ fontWeight: 800, fontSize: 13, color: COLORS.textPrimary }}>3-Day Non-Response Sequence</div>
-                <Muted>Automatically follow up if no response.</Muted>
-              </div>
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <HoverableButton style={{ ...btn({ variant: "ghost" }), padding: "4px 8px" }} onClick={() => alert("Drip Editor: Change trigger conditions and message delay.")}>Edit</HoverableButton>
-                <button 
-                  onClick={() => setDripActive(!dripActive)}
-                  style={{ background: dripActive ? SEMANTIC.success : SEMANTIC.danger, border: "none", borderRadius: 20, padding: "6px 14px", color: "#fff", fontWeight: 800, fontSize: 11, cursor: "pointer", transition: "all 0.2s ease", boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }}
-                >
-                  {dripActive ? "ACTIVE" : "PAUSED"}
-                </button>
-              </div>
-            </div>
-            {!dripActive && (
-              <div style={{ padding: "8px 12px", background: "rgba(239, 68, 68, 0.05)", border: `1px solid ${SEMANTIC.danger}30`, borderRadius: RADII.sm, fontSize: 11, color: SEMANTIC.danger, fontWeight: 600 }}>
-                ⚠ Outreach suspended. Automated follow-ups will not fire.
-              </div>
-            )}
-            
-            <div style={{ padding: 12, background: "rgba(240,244,248,0.6)", borderRadius: RADII.md, border: `1px dashed ${COLORS.borderStrong}` }}>
-              <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 8 }}>
-                <span style={{ width: 24, height: 24, borderRadius: 99, background: COLORS.navy, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800 }}>1</span>
-                <span style={{ fontSize: 13, fontWeight: 600 }}>Send Initial Email</span>
-              </div>
-              <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 8 }}>
-                <div style={{ width: 2, height: 16, background: COLORS.border, marginLeft: 11 }} />
-              </div>
-              <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 8 }}>
-                <span style={{ width: 24, height: 24, borderRadius: 99, background: COLORS.teal, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800 }}>2</span>
-                <span style={{ fontSize: 13, fontWeight: 600 }}>Wait 3 Days</span>
-              </div>
-              <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 8 }}>
-                <div style={{ width: 2, height: 16, background: COLORS.border, marginLeft: 11 }} />
-              </div>
-              <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                <span style={{ width: 24, height: 24, borderRadius: 99, background: SEMANTIC.warning, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800 }}>3</span>
-                <span style={{ fontSize: 13, fontWeight: 600 }}>Send SMS Follow-up</span>
-              </div>
-            </div>
-
-            <HoverableButton style={btn({ variant: "outline" })} onClick={() => alert("Workflow Builder: Feature coming soon to production. This will allow you to design custom drip sequences.")}>+ Create New Workflow</HoverableButton>
-          </div>
-        </Card>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "1.3fr 0.7fr", gap: 16 }}>
-        <Card title="Recent Send History" accent={COLORS.teal}>
-          <div style={{ display: "grid", gap: 8 }}>
-            {auditLog.filter(a => a.type === "outreach").slice(0, 5).map(a => (
-              <div key={a.id} style={{ padding: "10px 12px", border: `1px solid ${COLORS.border}`, borderRadius: RADII.sm, display: "flex", justifyContent: "space-between", alignItems: "center", background: COLORS.white }}>
-                <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                  <div style={{ width: 32, height: 32, borderRadius: 99, background: "rgba(34, 197, 94, 0.1)", color: SEMANTIC.success, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>✓</div>
-                  <div>
-                    <div style={{ fontWeight: 800, fontSize: 13 }}>{a.studentName || "Bulk Outreach"}</div>
-                    <Muted style={{ fontSize: 11 }}>{a.action} — {new Date(a.timestamp).toLocaleTimeString()}</Muted>
-                  </div>
+                <div style={{ fontSize: 11, fontWeight: 800, color: COLORS.textMuted, textTransform: "uppercase" }}>Queue Health</div>
+                <div style={{ height: 8, background: COLORS.chipBg, borderRadius: 4, marginTop: 8, overflow: "hidden" }}>
+                  <div style={{ width: `${(1 - pending.length / Math.max(students.length, 1)) * 100}%`, height: "100%", background: SEMANTIC.success, borderRadius: 4 }} />
                 </div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textMuted }}>{a.details?.split(".")[0]}</div>
+                <Muted style={{ marginTop: 6, display: "block" }}>{Math.round((1 - pending.length / Math.max(students.length, 1)) * 100)}% of students contacted</Muted>
               </div>
-            ))}
-            {auditLog.filter(a => a.type === "outreach").length === 0 && (
-              <div style={{ textAlign: "center", padding: 20 }}>
-                <Muted>No recent send history found.</Muted>
+              <Divider />
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div>
+                  <div style={{ fontSize: 24, fontWeight: 900, color: SEMANTIC.success }}>{students.filter(s => s.status === "Responded").length}</div>
+                  <Muted>Replied</Muted>
+                </div>
+                <div>
+                  <div style={{ fontSize: 24, fontWeight: 900, color: COLORS.navy }}>{students.filter(s => s.status === "Sent").length}</div>
+                  <Muted>Awaiting reply</Muted>
+                </div>
               </div>
-            )}
-          </div>
-        </Card>
+            </div>
+          </Card>
 
-        <Card title="Engagement Stats" accent={COLORS.navy}>
-          <div style={{ display: "grid", gap: 16 }}>
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 800, color: COLORS.textMuted, textTransform: "uppercase" }}>Queue Health</div>
-              <div style={{ height: 8, background: COLORS.chipBg, borderRadius: 4, marginTop: 8, overflow: "hidden" }}>
-                <div style={{ width: `${(1 - pending.length / Math.max(students.length, 1)) * 100}%`, height: "100%", background: SEMANTIC.success }} />
-              </div>
-              <Muted style={{ marginTop: 6, display: "block" }}>{Math.round((1 - pending.length / Math.max(students.length, 1)) * 100)}% of tasks completed</Muted>
+          <Card title="Recent Send History" accent={COLORS.teal}>
+            <div style={{ display: "grid", gap: 8 }}>
+              {auditLog.filter(a => a.type === "outreach").slice(0, 4).map(a => (
+                <div key={a.id} style={{ padding: "8px 10px", border: `1px solid ${COLORS.border}`, borderRadius: RADII.sm, display: "flex", justifyContent: "space-between", alignItems: "center", background: COLORS.white }}>
+                  <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 99, background: "rgba(34, 197, 94, 0.1)", color: SEMANTIC.success, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12 }}>✓</div>
+                    <div>
+                      <div style={{ fontWeight: 800, fontSize: 12 }}>{a.studentName || "Bulk Outreach"}</div>
+                      <Muted style={{ fontSize: 10 }}>{new Date(a.timestamp).toLocaleTimeString()}</Muted>
+                    </div>
+                  </div>
+                  <Muted style={{ fontSize: 10 }}>{a.details?.split(".")[0]}</Muted>
+                </div>
+              ))}
+              {auditLog.filter(a => a.type === "outreach").length === 0 && (
+                <div style={{ textAlign: "center", padding: 16 }}><Muted>No send history yet.</Muted></div>
+              )}
             </div>
-            <Divider />
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <div>
-                <div style={{ fontSize: 24, fontWeight: 900 }}>{students.filter(s => s.status === "Responded").length}</div>
-                <Muted>Total Replies</Muted>
-              </div>
-              <div>
-                <div style={{ fontSize: 24, fontWeight: 900 }}>{students.filter(s => s.status === "Sent").length}</div>
-                <Muted>Awaiting Reply</Muted>
-              </div>
-            </div>
-          </div>
-        </Card>
+          </Card>
+        </div>
       </div>
     </div>
   );

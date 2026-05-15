@@ -277,19 +277,16 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
   }
 
 
-  // For demo phase, we allow educators to see Audit. In production, this would be restricted to ADMIN.
-  const isAdmin = session?.user?.role === "ADMIN" || true; 
+  const isAdmin = session?.user?.role === "ADMIN";
   const tabs = useMemo(() => {
     const base = [
       { value: "Dashboard", label: "Dashboard" },
       { value: "Roster", label: "Roster" },
-      { value: "Templates", label: "Templates" },
       { value: "Outreach", label: "Outreach" },
       { value: "Calendar", label: "Calendar" },
       { value: "Analytics", label: "Analytics" },
     ];
     if (isAdmin) base.push({ value: "Audit", label: "Audit" });
-    base.push({ value: "Mobile", label: "Mobile" });
     return base;
   }, [isAdmin]);
 
@@ -405,7 +402,7 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
             unreachable: students.filter(s => s.status === "Unreachable" || (!s.email && !s.phone)).length 
           }}
           onSendEmail={() => { setTab("Outreach"); setBulkChannel("Email"); setBulkOpen(true); }}
-          onReviewDrafts={() => setTab("Templates")}
+          onReviewDrafts={() => setTab("Outreach")}
           onDownloadLog={exportReport}
           onHealthCheck={() => {
             const risk60 = students.filter(s => s.absenceDays && s.absenceDays >= 60 && s.absenceDays < 90);
@@ -417,16 +414,22 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
         />
       ) : null}
       {tab === "Roster" ? <RosterView students={filtered} allStudents={students} query={query} setQuery={setQuery} languageFilter={languageFilter} setLanguageFilter={setLanguageFilter} statusFilter={statusFilter} setStatusFilter={setStatusFilter} languages={languages} statuses={statuses} selected={selected} toggleSelected={toggleSelected} selectAllVisible={selectAllVisible} hoveredId={hoveredId} setHoveredId={setHoveredId} onRowClick={id => setActiveStudentId(id)} onSend={id => sendSingle(id)} privacyMode={privacyMode} maskPII={maskPII} /> : null}
-      {tab === "Templates" ? (
-        <TemplatesView 
-          tone={tone} 
-          setTone={setTone} 
-          subject={subject} 
-          setSubject={setSubject} 
-          body={body} 
-          setBody={setBody} 
-          previewLangs={previewLangs} 
-          setPreviewLangs={setPreviewLangs} 
+      {tab === "Outreach" ? <OutreachView
+          students={students}
+          template={{ subject, body }}
+          programName={program}
+          onOpenStudent={id => setActiveStudentId(id)}
+          auditLog={auditLog}
+          privacyMode={privacyMode}
+          maskPII={maskPII}
+          tone={tone}
+          setTone={setTone}
+          subject={subject}
+          setSubject={setSubject}
+          body={body}
+          setBody={setBody}
+          previewLangs={previewLangs}
+          setPreviewLangs={setPreviewLangs}
           library={library}
           onSaveTemplate={(name) => {
             const next = [...library, { name, subject, body, tone }];
@@ -438,12 +441,8 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
             setBody(t.body);
             setTone(t.tone);
           }}
-          privacyMode={privacyMode}
-          maskPII={maskPII}
           onSendTest={() => alert(`Test message sent to ${session?.user?.email || "you"}! Check your inbox for the ${tone} draft.`)}
-        />
-      ) : null}
-      {tab === "Outreach" ? <OutreachView students={students} template={{ subject, body }} programName={program} onOpenStudent={id => setActiveStudentId(id)} auditLog={auditLog} privacyMode={privacyMode} maskPII={maskPII} /> : null}
+        /> : null}
       {tab === "Analytics" ? <AnalyticsView students={students} onFilterStatus={s => { setStatusFilter(s); setTab("Roster"); }} privacyMode={privacyMode} maskPII={maskPII} /> : null}
       {tab === "Calendar" ? <CalendarView students={students} onOpenStudent={id => setActiveStudentId(id)} /> : null}
       {tab === "Audit" ? <AuditLogView auditLog={auditLog} privacyMode={privacyMode} maskPII={maskPII} /> : null}
