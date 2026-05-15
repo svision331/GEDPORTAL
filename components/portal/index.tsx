@@ -406,6 +406,7 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
             smsRequired: students.filter(s => s.status === "SMS Required").length, 
             unreachable: students.filter(s => s.status === "Unreachable" || (!s.email && !s.phone)).length 
           }}
+          auditLog={auditLog}
           onSendEmail={() => { setTab("Outreach"); setBulkChannel("Email"); setBulkOpen(true); }}
           onReviewDrafts={() => setTab("Outreach")}
           onDownloadLog={exportReport}

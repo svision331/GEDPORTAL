@@ -54,8 +54,21 @@ function OutreachView({
   onLoadTemplate: (t: any) => void;
   onSendTest: () => void;
 }) {
-  const pending = students.filter(s => s.status === "Not Contacted" || s.status === "Pending");
+  const [queueFilter, setQueueFilter] = useState<"all" | "first-contact" | "follow-up" | "problem">("all");
   const [builderOpen, setBuilderOpen] = useState(true);
+
+  const queueStudents = useMemo(() => {
+    switch (queueFilter) {
+      case "first-contact": return students.filter(s => s.status === "Not Contacted" || s.status === "Pending");
+      case "follow-up": return students.filter(s => s.status === "Sent" || s.status === "SMS Required");
+      case "problem": return students.filter(s => s.status === "Unreachable");
+      default: return students.filter(s => s.status !== "Responded");
+    }
+  }, [students, queueFilter]);
+
+  const firstContactCount = students.filter(s => s.status === "Not Contacted" || s.status === "Pending").length;
+  const followUpCount = students.filter(s => s.status === "Sent" || s.status === "SMS Required").length;
+  const problemCount = students.filter(s => s.status === "Unreachable").length;
 
   const langOptions: Language[] = [
     "Arabic", "Amharic", "Bengali", "Burmese", "Chinese", "Dutch",
@@ -179,8 +192,26 @@ function OutreachView({
       {/* ── Outreach Queue + Stats ── */}
       <div style={{ display: "grid", gridTemplateColumns: "1.3fr 0.7fr", gap: 16 }}>
         <Card title="Outreach Queue">
-          <Muted>Students needing contact. Click any row to open their profile.</Muted>
-          <Divider />
+          {/* Filter bar */}
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
+            {[
+              { key: "all", label: `All (${students.filter(s => s.status !== "Responded").length})` },
+              { key: "first-contact", label: `First Contact (${firstContactCount})`, color: firstContactCount > 0 ? SEMANTIC.danger : undefined },
+              { key: "follow-up", label: `Follow-Up (${followUpCount})`, color: followUpCount > 0 ? SEMANTIC.warning : undefined },
+              { key: "problem", label: `Unreachable (${problemCount})`, color: problemCount > 0 ? SEMANTIC.danger : undefined },
+            ].map(({ key, label, color }) => (
+              <button
+                key={key}
+                onClick={() => setQueueFilter(key as any)}
+                style={{
+                  padding: "5px 12px", borderRadius: RADII.full, border: `1px solid ${queueFilter === key ? (color || COLORS.teal) : COLORS.border}`,
+                  background: queueFilter === key ? (color ? color + "12" : "rgba(8,145,178,0.08)") : COLORS.white,
+                  color: queueFilter === key ? (color || COLORS.teal) : COLORS.textMuted,
+                  fontSize: 11, fontWeight: 800, cursor: "pointer", transition: "all 0.15s",
+                }}
+              >{label}</button>
+            ))}
+          </div>
           <div style={{ overflow: "auto", borderRadius: RADII.md, border: `1px solid ${COLORS.border}`, maxHeight: 360 }}>
             <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0, minWidth: 540 }}>
               <thead style={{ position: "sticky", top: 0, zIndex: 5 }}>
@@ -192,22 +223,26 @@ function OutreachView({
                 </tr>
               </thead>
               <tbody>
-                {pending.map(s => (
+                {queueStudents.map(s => (
                   <tr key={s.id} style={{ background: COLORS.white, cursor: "pointer", borderBottom: `1px solid ${COLORS.border}` }} onClick={() => onOpenStudent(s.id)}>
                     <td style={{ ...tdStyle(), color: COLORS.navy, fontWeight: 900, fontSize: 14 }}>{privacyMode ? maskPII(getStudentName(s), "name") : getStudentName(s)}</td>
                     <td style={tdStyle()}><LanguageTag lang={s.language} /></td>
                     <td style={tdStyle()}><StatusBadge status={s.status} /></td>
                     <td style={tdStyle()}>
                       <div style={{ fontSize: 11, fontStyle: "italic", color: COLORS.textSecondary }}>
-                        {formatTemplate(template.body, s, programName).slice(0, 60)}…
+                        {s.status === "Unreachable"
+                          ? "No valid contact info — update record manually"
+                          : formatTemplate(template.body, s, programName).slice(0, 60) + "…"}
                       </div>
                     </td>
                   </tr>
                 ))}
-                {pending.length === 0 && (
+                {queueStudents.length === 0 && (
                   <tr><td colSpan={4} style={{ padding: 24, textAlign: "center" }}>
-                    <div style={{ fontWeight: 900 }}>You're up to date</div>
-                    <Muted>No students currently need first contact.</Muted>
+                    <div style={{ fontWeight: 800, marginBottom: 4 }}>
+                      {queueFilter === "all" ? "All students responded ✓" : "No students in this category"}
+                    </div>
+                    <Muted>{queueFilter === "all" ? "Every student has replied." : "Try a different filter above."}</Muted>
                   </td></tr>
                 )}
               </tbody>
@@ -221,9 +256,9 @@ function OutreachView({
               <div>
                 <div style={{ fontSize: 11, fontWeight: 800, color: COLORS.textMuted, textTransform: "uppercase" }}>Queue Health</div>
                 <div style={{ height: 8, background: COLORS.chipBg, borderRadius: 4, marginTop: 8, overflow: "hidden" }}>
-                  <div style={{ width: `${(1 - pending.length / Math.max(students.length, 1)) * 100}%`, height: "100%", background: SEMANTIC.success, borderRadius: 4 }} />
+                  <div style={{ width: `${(1 - firstContactCount / Math.max(students.length, 1)) * 100}%`, height: "100%", background: SEMANTIC.success, borderRadius: 4 }} />
                 </div>
-                <Muted style={{ marginTop: 6, display: "block" }}>{Math.round((1 - pending.length / Math.max(students.length, 1)) * 100)}% of students contacted</Muted>
+                <Muted style={{ marginTop: 6, display: "block" }}>{Math.round((1 - firstContactCount / Math.max(students.length, 1)) * 100)}% of students contacted</Muted>
               </div>
               <Divider />
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
