@@ -291,10 +291,8 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
   return (
     <AppShell 
       title="The Educator Outreach Portal" 
-      subtitle={`Program: ${program} • 🔐 Session Active (Auto-expire in 2h)`} 
-      onExportReport={exportReport} 
+      subtitle={`Program: ${program} • Session Active`} 
       onOpenLegal={type => setLegalModalOpen({ open: true, type })} 
-      onOpenSettings={() => setSettingsOpen(true)} 
       onStartDemo={() => setDemoStep(1)}
       userName={session?.user?.name} 
       role={session?.user?.role}
@@ -370,7 +368,10 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
             <HoverableButton style={btn({ variant: "primary" })} onClick={openBulk}>Send Bulk</HoverableButton>
           )}
           {tab === "Reports" && (
-            <HoverableButton style={btn({ variant: "outline" })} onClick={exportPDFReport}>📄 Export PDF</HoverableButton>
+            <>
+              <HoverableButton style={btn({ variant: "outline" })} onClick={exportPDFReport}>📄 Export PDF</HoverableButton>
+              {isAdmin && <HoverableButton style={btn({ variant: "outline" })} onClick={() => setSettingsOpen(true)}>⚙️ AI Settings</HoverableButton>}
+            </>
           )}
         </div>
       </div>

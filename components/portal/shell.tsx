@@ -47,10 +47,14 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-function TopBar({ title, subtitle, onExportReport, onOpenSettings, onStartDemo, userName, role, privacyMode, setPrivacyMode, showToast }: { title: string; subtitle?: string; onExportReport?: () => void; onOpenSettings: () => void; onStartDemo: () => void; userName?: string; role?: string; privacyMode: boolean; setPrivacyMode: (v: boolean) => void; showToast: (m: string, t?: any) => void }) {
+function TopBar({ title, subtitle, onStartDemo, userName, role, privacyMode, setPrivacyMode, showToast }: { title: string; subtitle?: string; onStartDemo: () => void; userName?: string; role?: string; privacyMode: boolean; setPrivacyMode: (v: boolean) => void; showToast: (m: string, t?: any) => void }) {
+  const [helpOpen, setHelpOpen] = useState(false);
+
   return (
     <div style={{ position: "sticky", top: 0, zIndex: 30, background: "rgba(240,244,248,0.92)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", borderBottom: `1px solid ${COLORS.border}`, boxShadow: "0 1px 0 rgba(15,23,42,0.04)" }}>
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+
+        {/* LEFT: logo + title */}
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ width: 36, height: 36, borderRadius: RADII.sm, background: `linear-gradient(135deg, ${COLORS.navy}, ${COLORS.teal})`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 2px 8px rgba(31,58,95,0.3)" }}>
             <img src={logoImg} alt="Logo" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit" }} />
@@ -60,45 +64,69 @@ function TopBar({ title, subtitle, onExportReport, onOpenSettings, onStartDemo, 
             {subtitle ? <Muted style={{ display: "block", marginTop: 1, fontSize: 11 }}>{subtitle}</Muted> : null}
           </div>
         </div>
+
+        {/* RIGHT: compact controls */}
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <HoverableButton 
-            style={{ ...btn({ variant: "teal" }), padding: "6px 16px", borderRadius: 20, boxShadow: "0 4px 12px rgba(8,145,178,0.2)", fontSize: 12 }} 
-            onClick={onStartDemo}
-          >
-            🚀 Run Demo
-          </HoverableButton>
-          <div style={{ width: 1, height: 24, background: COLORS.border, margin: "0 4px" }} />
-          <div title="FERPA & SOC2 Compliance Ready: All data is encrypted at rest and in transit." style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(22,163,74,0.1)", color: SEMANTIC.success, padding: "5px 12px", borderRadius: RADII.full, fontSize: 11, fontWeight: 800, cursor: "help" }}>
-            <span style={{ fontSize: 12 }}>🛡️</span> SECURE
-          </div>
-          <button 
+
+          {/* Privacy + Secure — single icon button */}
+          <button
             onClick={() => { setPrivacyMode(!privacyMode); showToast(`Privacy Mode ${!privacyMode ? "On — PII masked" : "Off — PII visible"}`); }}
-            title={privacyMode ? "Privacy Mode is ON — click to show PII" : "Privacy Mode is OFF — click to mask PII"}
-            style={{ display: "flex", alignItems: "center", gap: 6, background: privacyMode ? COLORS.navy : "rgba(148,163,184,0.1)", color: privacyMode ? "#fff" : COLORS.textMuted, padding: "5px 12px", borderRadius: RADII.full, fontSize: 11, fontWeight: 800, border: `1px solid ${privacyMode ? "transparent" : COLORS.border}`, cursor: "pointer", transition: "all 0.2s" }}
+            title={privacyMode ? "Privacy On — PII masked. Click to reveal." : "Privacy Off — PII visible. FERPA-compliant encryption active."}
+            style={{ width: 32, height: 32, borderRadius: RADII.full, display: "flex", alignItems: "center", justifyContent: "center", background: privacyMode ? COLORS.navy : "rgba(22,163,74,0.08)", color: privacyMode ? "#fff" : SEMANTIC.success, border: `1px solid ${privacyMode ? "transparent" : "rgba(22,163,74,0.2)"}`, cursor: "pointer", fontSize: 15, transition: "all 0.2s", flexShrink: 0 }}
           >
-            {privacyMode ? "🔒 Privacy On" : "🔓 Privacy Off"}
+            {privacyMode ? "🔒" : "🛡️"}
           </button>
-          <Chip label={role === "ADMIN" ? "Admin Mode" : "Educator Access"} color={role === "ADMIN" ? COLORS.teal : COLORS.navyLight} />
-          <HoverableButton onClick={onExportReport} style={btn({ variant: "outline" })}>⬇ Export Report</HoverableButton>
-          {role === "ADMIN" && <HoverableButton onClick={onOpenSettings} style={btn({ variant: "outline" })}>⚙️ AI Settings</HoverableButton>}
-          <div style={{ width: 1, height: 24, background: COLORS.border, margin: "0 4px" }} />
+
+          {/* Help menu — Run Demo inside */}
+          <div style={{ position: "relative" }}>
+            <button
+              onClick={() => setHelpOpen(v => !v)}
+              title="Help & Demo"
+              style={{ width: 32, height: 32, borderRadius: RADII.full, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(148,163,184,0.1)", color: COLORS.textMuted, border: `1px solid ${COLORS.border}`, cursor: "pointer", fontSize: 15, transition: "all 0.2s", flexShrink: 0 }}
+            >
+              ?
+            </button>
+            {helpOpen && (
+              <div style={{ position: "absolute", top: 40, right: 0, background: COLORS.white, border: `1px solid ${COLORS.borderStrong}`, borderRadius: RADII.md, boxShadow: SHADOWS.modal, padding: 8, minWidth: 180, zIndex: 100 }}>
+                <button
+                  onClick={() => { onStartDemo(); setHelpOpen(false); }}
+                  style={{ width: "100%", textAlign: "left", padding: "8px 12px", borderRadius: RADII.sm, border: "none", background: "none", cursor: "pointer", fontSize: 13, fontWeight: 700, color: COLORS.navy, display: "flex", alignItems: "center", gap: 8 }}
+                  onMouseEnter={e => (e.currentTarget.style.background = COLORS.bg)}
+                  onMouseLeave={e => (e.currentTarget.style.background = "none")}
+                >
+                  🚀 Run Guided Demo
+                </button>
+                <div style={{ padding: "6px 12px 4px", fontSize: 10, fontWeight: 800, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: "0.06em" }}>Security</div>
+                <div style={{ padding: "4px 12px 8px", fontSize: 11, color: COLORS.textMuted, lineHeight: 1.5 }}>
+                  FERPA-aware · Encrypted at rest · TLS in transit
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div style={{ width: 1, height: 24, background: COLORS.border }} />
+
+          {/* User identity + log out */}
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ textAlign: "right" }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.textPrimary }}>{userName || "Educator"}</div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: "0.05em" }}>{role}</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: role === "ADMIN" ? COLORS.teal : COLORS.textMuted, textTransform: "uppercase", letterSpacing: "0.05em" }}>{role}</div>
             </div>
-            <HoverableButton onClick={() => signOut()} style={{ ...btn({ variant: "ghost" }), color: "var(--danger)" }}>Log Out</HoverableButton>
+            <HoverableButton onClick={() => signOut()} style={{ ...btn({ variant: "ghost" }), color: "var(--danger)", padding: "6px 10px" }}>Log Out</HoverableButton>
           </div>
+
         </div>
       </div>
+      {/* Click-outside to close help menu */}
+      {helpOpen && <div onClick={() => setHelpOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 99 }} />}
     </div>
   );
 }
 
-function AppShell({ children, title, subtitle, onExportReport, onOpenLegal, onOpenSettings, onStartDemo, userName, role, privacyMode, setPrivacyMode, showToast, showFooter = true }: { children: React.ReactNode; title: string; subtitle?: string; onExportReport?: () => void; onOpenLegal: (t: "terms" | "privacy" | "dmca" | "refund") => void; onOpenSettings: () => void; onStartDemo: () => void; userName?: string; role?: string; privacyMode: boolean; setPrivacyMode: (v: boolean) => void; showToast: (m: string, t?: any) => void; showFooter?: boolean }) {
+function AppShell({ children, title, subtitle, onOpenLegal, onStartDemo, userName, role, privacyMode, setPrivacyMode, showToast, showFooter = true }: { children: React.ReactNode; title: string; subtitle?: string; onOpenLegal: (t: "terms" | "privacy" | "dmca" | "refund") => void; onStartDemo: () => void; userName?: string; role?: string; privacyMode: boolean; setPrivacyMode: (v: boolean) => void; showToast: (m: string, t?: any) => void; showFooter?: boolean }) {
   return (
     <div style={{ minHeight: "100vh", background: COLORS.bg, color: COLORS.textPrimary }}>
-      <TopBar title={title} subtitle={subtitle} onExportReport={onExportReport} onOpenSettings={onOpenSettings} onStartDemo={onStartDemo} userName={userName} role={role} privacyMode={privacyMode} setPrivacyMode={setPrivacyMode} showToast={showToast} />
+      <TopBar title={title} subtitle={subtitle} onStartDemo={onStartDemo} userName={userName} role={role} privacyMode={privacyMode} setPrivacyMode={setPrivacyMode} showToast={showToast} />
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "20px 20px 32px", minHeight: "calc(100vh - 160px)" }}>{children}</div>
       {showFooter && <Footer onOpenLegal={onOpenLegal} />}
       <CookieBanner />
