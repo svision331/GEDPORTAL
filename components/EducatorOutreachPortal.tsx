@@ -1021,7 +1021,7 @@ function TemplatesView({ tone, setTone, subject, setSubject, body, setBody, prev
   );
 }
 
-function OutreachView({ students, template, programName, onOpenStudent }: { students: Student[]; template: { subject: string; body: string }; programName: string; onOpenStudent: (id: string) => void }) {
+function OutreachView({ students, template, programName, onOpenStudent, auditLog }: { students: Student[]; template: { subject: string; body: string }; programName: string; onOpenStudent: (id: string) => void; auditLog: AuditEntry[] }) {
   const pending = students.filter(s => s.status === "Not Contacted" || s.status === "Pending");
   const [dripActive, setDripActive] = useState(false);
 
@@ -1043,11 +1043,16 @@ function OutreachView({ students, template, programName, onOpenStudent }: { stud
               </thead>
               <tbody>
                 {pending.map(s => (
-                  <tr key={s.id} style={{ background: "#fff", cursor: "pointer" }} onClick={() => onOpenStudent(s.id)}>
-                    <td style={{ ...tdStyle(), fontWeight: 850 }}>{s.name}</td>
+                  <tr key={s.id} style={{ background: "#fff", cursor: "pointer", borderBottom: `1px solid ${COLORS.border}` }} onClick={() => onOpenStudent(s.id)}>
+                    <td style={{ ...tdStyle(), color: COLORS.navy, fontWeight: 900, fontSize: 14 }}>{s.name}</td>
                     <td style={tdStyle()}><LanguageTag lang={s.language} /></td>
                     <td style={tdStyle()}><StatusBadge status={s.status} /></td>
-                    <td style={tdStyle()}><div style={{ color: COLORS.textMuted, fontSize: 12, fontStyle: "italic" }}>{formatTemplate(template.body, s, programName).slice(0, 50)}…</div></td>
+                    <td style={tdStyle()}>
+                      <div style={{ color: COLORS.textSecondary, fontSize: 11, fontStyle: "normal", display: "flex", flexDirection: "column" }}>
+                        <div style={{ color: COLORS.textMuted, fontSize: 10, marginBottom: 2 }}>Draft updated: Just now</div>
+                        <div style={{ fontStyle: "italic" }}>{formatTemplate(template.body, s, programName).slice(0, 60)}…</div>
+                      </div>
+                    </td>
                   </tr>
                 ))}
                 {pending.length === 0 ? (
@@ -1065,13 +1070,21 @@ function OutreachView({ students, template, programName, onOpenStudent }: { stud
                 <div style={{ fontWeight: 800, fontSize: 13, color: COLORS.textPrimary }}>3-Day Non-Response Sequence</div>
                 <Muted>Automatically follow up if no response.</Muted>
               </div>
-              <button 
-                onClick={() => setDripActive(!dripActive)}
-                style={{ background: dripActive ? SEMANTIC.success : COLORS.chipBg, border: "none", borderRadius: 20, padding: "4px 12px", color: dripActive ? "#fff" : COLORS.textMuted, fontWeight: 700, fontSize: 12, cursor: "pointer", transition: "all 0.2s ease" }}
-              >
-                {dripActive ? "Active" : "Paused"}
-              </button>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <HoverableButton style={btn({ variant: "ghost", padding: "4px 8px" })} onClick={() => alert("Drip Editor: Change trigger conditions and message delay.")}>Edit</HoverableButton>
+                <button 
+                  onClick={() => setDripActive(!dripActive)}
+                  style={{ background: dripActive ? SEMANTIC.success : SEMANTIC.danger, border: "none", borderRadius: 20, padding: "6px 14px", color: "#fff", fontWeight: 800, fontSize: 11, cursor: "pointer", transition: "all 0.2s ease", boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }}
+                >
+                  {dripActive ? "ACTIVE" : "PAUSED"}
+                </button>
+              </div>
             </div>
+            {!dripActive && (
+              <div style={{ padding: "8px 12px", background: "rgba(239, 68, 68, 0.05)", border: `1px solid ${SEMANTIC.danger}30`, borderRadius: RADII.sm, fontSize: 11, color: SEMANTIC.danger, fontWeight: 600 }}>
+                ⚠ Outreach suspended. Automated follow-ups will not fire.
+              </div>
+            )}
             
             <div style={{ padding: 12, background: "rgba(240,244,248,0.6)", borderRadius: RADII.md, border: `1px dashed ${COLORS.borderStrong}` }}>
               <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 8 }}>
@@ -1095,6 +1108,53 @@ function OutreachView({ students, template, programName, onOpenStudent }: { stud
             </div>
 
             <HoverableButton style={btn({ variant: "outline" })} onClick={() => alert("Workflow Builder: Feature coming soon to production. This will allow you to design custom drip sequences.")}>+ Create New Workflow</HoverableButton>
+          </div>
+        </Card>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1.3fr 0.7fr", gap: 16 }}>
+        <Card title="Recent Send History" accent={COLORS.teal}>
+          <div style={{ display: "grid", gap: 8 }}>
+            {auditLog.filter(a => a.type === "outreach").slice(0, 5).map(a => (
+              <div key={a.id} style={{ padding: "10px 12px", border: `1px solid ${COLORS.border}`, borderRadius: RADII.sm, display: "flex", justifyContent: "space-between", alignItems: "center", background: COLORS.white }}>
+                <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 99, background: "rgba(34, 197, 94, 0.1)", color: SEMANTIC.success, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>✓</div>
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: 13 }}>{a.studentName || "Bulk Outreach"}</div>
+                    <Muted style={{ fontSize: 11 }}>{a.action} — {new Date(a.timestamp).toLocaleTimeString()}</Muted>
+                  </div>
+                </div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textMuted }}>{a.details?.split(".")[0]}</div>
+              </div>
+            ))}
+            {auditLog.filter(a => a.type === "outreach").length === 0 && (
+              <div style={{ textAlign: "center", padding: 20 }}>
+                <Muted>No recent send history found.</Muted>
+              </div>
+            )}
+          </div>
+        </Card>
+
+        <Card title="Engagement Stats" accent={COLORS.navy}>
+          <div style={{ display: "grid", gap: 16 }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 800, color: COLORS.textMuted, textTransform: "uppercase" }}>Queue Health</div>
+              <div style={{ height: 8, background: COLORS.chipBg, borderRadius: 4, marginTop: 8, overflow: "hidden" }}>
+                <div style={{ width: `${(1 - pending.length / Math.max(students.length, 1)) * 100}%`, height: "100%", background: SEMANTIC.success }} />
+              </div>
+              <Muted style={{ marginTop: 6, display: "block" }}>{Math.round((1 - pending.length / Math.max(students.length, 1)) * 100)}% of tasks completed</Muted>
+            </div>
+            <Divider />
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div>
+                <div style={{ fontSize: 24, fontWeight: 900 }}>{students.filter(s => s.status === "Responded").length}</div>
+                <Muted>Total Replies</Muted>
+              </div>
+              <div>
+                <div style={{ fontSize: 24, fontWeight: 900 }}>{students.filter(s => s.status === "Sent").length}</div>
+                <Muted>Awaiting Reply</Muted>
+              </div>
+            </div>
           </div>
         </Card>
       </div>
@@ -1770,7 +1830,7 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
           onSendTest={() => alert(`Test message sent to ${session?.user?.email || "you"}! Check your inbox for the ${tone} draft.`)}
         />
       ) : null}
-      {tab === "Outreach" ? <OutreachView students={students} template={{ subject, body }} programName={programName} onOpenStudent={id => setActiveStudentId(id)} /> : null}
+      {tab === "Outreach" ? <OutreachView students={students} template={{ subject, body }} programName={programName} onOpenStudent={id => setActiveStudentId(id)} auditLog={auditLog} /> : null}
       {tab === "Analytics" ? <AnalyticsView students={students} /> : null}
       {tab === "Audit" ? <AuditLogView auditLog={auditLog} /> : null}
       {tab === "Mobile" ? <MobileDemoView students={students} onTabChange={setTab} onOpenStudent={id => setActiveStudentId(id)} /> : null}
