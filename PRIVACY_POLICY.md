@@ -2,7 +2,7 @@
 
 **Last Updated:** February 2026
 
-Antigravity ("we", "us", or "our") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use the Educator Outreach Portal (the "Service").
+Soulvision LLC ("we", "us", or "our") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use the Educator Outreach Portal (the "Service").
 
 By using the Service, you consent to the data practices described in this policy.
 
@@ -64,6 +64,6 @@ We may update this Privacy Policy from time to time in order to reflect changes 
 
 If you have questions or comments about this Privacy Policy or our data practices, please contact us at:
 
-**Antigravity**
+**Soulvision LLC**
 [Insert Email Address]
 [Insert Mailing Address - Optional]

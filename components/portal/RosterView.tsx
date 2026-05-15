@@ -83,7 +83,7 @@ function RosterView(props: { students: Student[]; allStudents: Student[]; query:
               <HoverableButton style={btn({ variant: "outline" })} onClick={() => {
                 // To open bulk modal we need to dispatch an event or trigger it via a callback.
                 // Alternatively, we can just ask the user to click Send Bulk from Command Center.
-                alert("Use the 'Send Bulk' button in the Command Center to message these selected students.");
+                showToast?.("Select students then use Send Bulk in the action bar.", "info");
               }}>Bulk Actions</HoverableButton>
             </div>
           </div>

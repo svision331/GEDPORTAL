@@ -1,4 +1,4 @@
-# Lean SaaS Legal Checklist (Tailored to Antigravity)
+# Lean SaaS Legal Checklist (Tailored to Soulvision LLC)
 
 ## 🧱 Business Structure
 
@@ -33,7 +33,7 @@
 
 ## 🧠 AI-Specific Clauses
 
-**Antigravity MUST include:**
+**Soulvision LLC MUST include:**
 
 - [x] AI outputs may be inaccurate
 - [x] Not professional advice
@@ -63,7 +63,7 @@
 
 ## 🏷️ Intellectual Property
 
-- [x] Copyright © Antigravity 2026 (in Footer)
+- [x] Copyright © Soulvision LLC 2026 (in Footer)
 - [x] Define ownership of AI outputs (in ToS)
 - [ ] Trademark filing (optional early, smart long term)
   - *File through United States Patent and Trademark Office*

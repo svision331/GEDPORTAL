@@ -144,7 +144,7 @@ function OutreachView({
                   </span>
                 </div>
                 <textarea value={body} onChange={e => setBody(e.target.value)} style={{ ...inputStyle(), minHeight: 120, resize: "vertical", lineHeight: 1.5 }} />
-                <Muted style={{ display: "block", marginTop: 6 }}>Tags: {"{Student_Name}"}, {"{Program_Name}"}</Muted>
+                <Muted style={{ display: "block", marginTop: 6 }}>Tags: {"{Student_Name}"}, {"{Program_Name}"}, {"{Educator_Name}"}</Muted>
               </div>
 
               <HoverableButton
@@ -232,7 +232,7 @@ function OutreachView({
                       <div style={{ fontSize: 11, fontStyle: "italic", color: COLORS.textSecondary }}>
                         {s.status === "Unreachable"
                           ? "No valid contact info — update record manually"
-                          : formatTemplate(template.body, s, programName).slice(0, 60) + "…"}
+                          : formatTemplate(template.body, s, programName, undefined).slice(0, 60) + "…"}
                       </div>
                     </td>
                   </tr>

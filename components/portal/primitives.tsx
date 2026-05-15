@@ -184,11 +184,11 @@ const TOS_CONTENT = `
 
 ## 1. Agreement to Terms
 
-By accessing or using Antigravity (“Service”), you agree to these Terms. If you do not agree, do not use the Service.
+By accessing or using Soulvision LLC (“Service”), you agree to these Terms. If you do not agree, do not use the Service.
 
 ## 2. Description of Service
 
-Antigravity provides AI-powered tools that generate structured creative outputs, design systems, and related digital content. Outputs are generated automatically using artificial intelligence systems.
+GED Portal provides AI-powered educator outreach tools for student reconnection and attendance tracking. Outputs are generated automatically using artificial intelligence systems.
 
 ## 3. Eligibility
 
@@ -224,7 +224,7 @@ We do not guarantee:
 - Legal compliance
 - Fitness for any specific purpose
 
-Outputs are provided “as is.” You are solely responsible for reviewing and validating outputs before use. Antigravity is not liable for damages resulting from reliance on AI-generated content.
+Outputs are provided “as is.” You are solely responsible for reviewing and validating outputs before use. Soulvision LLC is not liable for damages resulting from reliance on AI-generated content.
 
 ## 7. Intellectual Property
 
@@ -256,11 +256,11 @@ We may suspend or terminate access if you violate these Terms. You may cancel at
 ## 10. Limitation of Liability
 
 To the fullest extent permitted by law:
-Antigravity shall not be liable for indirect, incidental, consequential, or special damages. Total liability shall not exceed the amount paid in the prior 12 months.
+Soulvision LLC shall not be liable for indirect, incidental, consequential, or special damages. Total liability shall not exceed the amount paid in the prior 12 months.
 
 ## 11. Indemnification
 
-You agree to indemnify and hold harmless Antigravity from claims arising from:
+You agree to indemnify and hold harmless Soulvision LLC from claims arising from:
 
 - Your use of the Service
 - Your misuse of AI outputs
@@ -286,7 +286,7 @@ const PRIVACY_POLICY_CONTENT = `
 
 **Last Updated:** February 2026
 
-Antigravity ("we", "us", or "our") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use the Educator Outreach Portal (the "Service").
+Soulvision LLC ("we", "us", or "our") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use the GED Portal (the "Service").
 
 By using the Service, you consent to the data practices described in this policy.
 
@@ -348,7 +348,7 @@ We may update this Privacy Policy from time to time in order to reflect changes 
 
 If you have questions or comments about this Privacy Policy or our data practices, please contact us at:
 
-**Antigravity Legal**
+**Soulvision LLC Legal**
 100 Innovation Way
 Newark, NJ 07102
 legal@gedportal.edu
@@ -359,9 +359,9 @@ const DMCA_POLICY_CONTENT = `
 
 **Digital Millennium Copyright Act ("DMCA") Policy**
 
-Antigravity respects the intellectual property rights of others and expects its users to do the same. In accordance with the Digital Millennium Copyright Act of 1998, the text of which may be found on the U.S. Copyright Office website at http://www.copyright.gov/legislation/dmca.pdf, Antigravity will respond expeditiously to claims of copyright infringement committed using the Antigravity service and/or the Antigravity website (the "Site") if such claims are reported to Antigravity's Designated Copyright Agent identified in the sample notice below.
+Soulvision LLC respects the intellectual property rights of others and expects its users to do the same. In accordance with the Digital Millennium Copyright Act of 1998, the text of which may be found on the U.S. Copyright Office website at http://www.copyright.gov/legislation/dmca.pdf, Soulvision LLC will respond expeditiously to claims of copyright infringement committed using the Soulvision LLC service and/or the Soulvision LLC website (the "Site") if such claims are reported to Soulvision LLC's Designated Copyright Agent identified in the sample notice below.
 
-If you are a copyright owner, authorized to act on behalf of one, or authorized to act under any exclusive right under copyright, please report alleged copyright infringements taking place on or through the Site by completing the following DMCA Notice of Alleged Infringement and delivering it to Antigravity's Designated Copyright Agent.
+If you are a copyright owner, authorized to act on behalf of one, or authorized to act under any exclusive right under copyright, please report alleged copyright infringements taking place on or through the Site by completing the following DMCA Notice of Alleged Infringement and delivering it to Soulvision LLC's Designated Copyright Agent.
 
 **1. DMCA Notice of Alleged Infringement ("Notice")**
 *   Identify the copyrighted work that you claim has been infringed, or - if multiple copyrighted works are covered by this Notice - you may provide a representative list of the copyrighted works that you claim have been infringed.
@@ -372,10 +372,10 @@ If you are a copyright owner, authorized to act on behalf of one, or authorized 
     *   "I hereby state that the information in this Notice is accurate and, under penalty of perjury, that I am the owner, or authorized to act on behalf of the owner, of the copyright or of an exclusive right under the copyright that is allegedly infringed."
 *   Provide your full legal name and your electronic or physical signature.
 
-Deliver this Notice, with all items completed, to Antigravity's Designated Copyright Agent:
+Deliver this Notice, with all items completed, to Soulvision LLC's Designated Copyright Agent:
 
 **Copyright Agent**
-Antigravity Legal
+Soulvision LLC Legal
 100 Innovation Way
 Newark, NJ 07102
 legal@gedportal.edu
@@ -387,7 +387,7 @@ If you believe that your content that was removed (or to which access was disabl
 *   A statement that you have a good faith belief that the content was removed or disabled as a result of mistake or a misidentification of the content; and
 *   Your name, address, telephone number, and e-mail address, a statement that you consent to the jurisdiction of the federal court in Newark, New Jersey, and a statement that you will accept service of process from the person who provided notification of the alleged infringement.
 
-If a counter-notice is received by the Copyright Agent, Antigravity may send a copy of the counter-notice to the original complaining party informing that person that it may replace the removed content or cease disabling it in 10 business days. Unless the copyright owner files an action seeking a court order against the content provider, member or user, the removed content may be replaced, or access to it restored, in 10 to 14 business days or more after receipt of the counter-notice, at Antigravity's sole discretion.
+If a counter-notice is received by the Copyright Agent, Soulvision LLC may send a copy of the counter-notice to the original complaining party informing that person that it may replace the removed content or cease disabling it in 10 business days. Unless the copyright owner files an action seeking a court order against the content provider, member or user, the removed content may be replaced, or access to it restored, in 10 to 14 business days or more after receipt of the counter-notice, at Soulvision LLC's sole discretion.
 `;
 
 const REFUND_POLICY_CONTENT = `
@@ -395,13 +395,13 @@ const REFUND_POLICY_CONTENT = `
 
 **Refund and Cancellation Policy**
 
-Antigravity strives to provide the highest quality service to our users. This Refund and Cancellation Policy outlines the conditions under which refunds may be granted and how you can manage your subscription.
+Soulvision LLC strives to provide the highest quality service to our users. This Refund and Cancellation Policy outlines the conditions under which refunds may be granted and how you can manage your subscription.
 
 **1. Subscription Cancellations**
 You may cancel your subscription to the Educator Outreach Portal at any time. Cancellation will take effect at the end of your current billing cycle. You will retain access to the Service until the end of that cycle. We do not provide prorated refunds for mid-cycle cancellations.
 
 **2. Refund Eligibility**
-Because Antigravity incurs immediate computing costs when you generate AI outputs, we generally **do not offer refunds** for past subscription charges or one-time purchases, except in the specific circumstances outlined below.
+Because Soulvision LLC incurs immediate computing costs when you generate AI outputs, we generally **do not offer refunds** for past subscription charges or one-time purchases, except in the specific circumstances outlined below.
 
 **3. Exceptional Circumstances for Refunds**
 We will review requests for refunds on a case-by-case basis. A refund *may* be granted if:
@@ -524,12 +524,13 @@ function useTranslation(text: string, lang: Language): { translated: string; loa
   return { translated, loading, error };
 }
 
-function formatTemplate(template: string, student: Student, programName: string) {
+function formatTemplate(template: string, student: Student, programName: string, educatorName?: string) {
   return template
     .replaceAll("{Student_Name}", getStudentName(student))
     .replaceAll("{First_Name}", student.firstName)
     .replaceAll("{Last_Name}", student.lastName)
-    .replaceAll("{Program_Name}", programName);
+    .replaceAll("{Program_Name}", programName)
+    .replaceAll("{Educator_Name}", educatorName || "your educator");
 }
 
 const MOCK_STUDENTS: Student[] = [
@@ -601,10 +602,10 @@ const getStudentName = (s: Student) => `${s.firstName} ${s.lastName}`;
 const METRIC_ACCENTS = [COLORS.teal, SEMANTIC.warning, SEMANTIC.danger, "#7C3AED"];
 const MOCK_AUDIT: Omit<AuditEntry, "id" | "timestamp">[] = [
   { actor: "System", action: "Database Initialized", details: "GED Reconnect portal first load seed completed.", type: "system" },
-  { actor: "Mr. Caldwell", action: "Compliance Review", details: "All student records verified for language compliance and contact status.", type: "compliance" },
-  { actor: "Mr. Caldwell", action: "Bulk Outreach", details: "Sent 12 initial check-in messages to Ukrainian-speaking students.", type: "outreach" },
+  { actor: "Educator", action: "Compliance Review", details: "All student records verified for language compliance and contact status.", type: "compliance" },
+  { actor: "Educator", action: "Bulk Outreach", details: "Sent 12 initial check-in messages to Ukrainian-speaking students.", type: "outreach" },
   { actor: "System", action: "Smart Import", details: "Successfully parsed 5 student records from manual paste source using AI.", type: "import" },
-  { actor: "Mr. Caldwell", action: "Template Update", details: "Modified 'Encouraging' tone template to include new re-enrollment link.", type: "system" },
+  { actor: "Educator", action: "Template Update", details: "Modified 'Encouraging' tone template to include new re-enrollment link.", type: "system" },
   { actor: "System (Webhook)", action: "SMS Received", studentName: "Lusine Bagryan", details: 'Student replied: "I finished my paperwork, what next?"', type: "outreach" },
-  { actor: "Mr. Caldwell", action: "Manual Export", details: "Exported audit-ready CSV for Q3 compliance reporting.", type: "compliance" },
+  { actor: "Educator", action: "Manual Export", details: "Exported audit-ready CSV for Q3 compliance reporting.", type: "compliance" },
 ];

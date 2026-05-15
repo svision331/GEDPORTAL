@@ -76,10 +76,10 @@ export const STATUS_CONFIG: Record<Status, { dot: string; color: string; bg: str
 };
 
 export const TONE_TEMPLATES: Record<TemplateTone, { subject: string; body: string }> = {
-  neutral: { subject: "We missed you in the GED program", body: "Hello {Student_Name}, this is Mr. Caldwell from the {Program_Name}. We haven't seen you in a while and wanted to check in. Are you interested in returning? Reply YES and we'll help you re-enroll." },
-  encouraging: { subject: "We'd love to welcome you back", body: "Hi {Student_Name}, Mr. Caldwell here from {Program_Name}. You still have a place with us, and we can support you step-by-step. If you want to return, reply YES and we'll set you up with the next class." },
-  urgent: { subject: "Important: Attendance status needs attention", body: "Hello {Student_Name}, this is Mr. Caldwell from {Program_Name}. Our records show you haven't attended recently. Please reply ASAP if you plan to continue so we can hold your spot and support you." },
-  exit: { subject: "Confirming your enrollment status", body: "Hello {Student_Name}, this is Mr. Caldwell from {Program_Name}. If you are not planning to return, please reply STOP so we can document an exit plan properly. If you want to return, reply YES." },
+  neutral: { subject: "We missed you in the GED program", body: "Hello {Student_Name}, this is {Educator_Name} from the {Program_Name}. We haven't seen you in a while and wanted to check in. Are you interested in returning? Reply YES and we'll help you re-enroll." },
+  encouraging: { subject: "We'd love to welcome you back", body: "Hi {Student_Name}, {Educator_Name} here from {Program_Name}. You still have a place with us, and we can support you step-by-step. If you want to return, reply YES and we'll set you up with the next class." },
+  urgent: { subject: "Important: Attendance status needs attention", body: "Hello {Student_Name}, this is {Educator_Name} from {Program_Name}. Our records show you haven't attended recently. Please reply ASAP if you plan to continue so we can hold your spot and support you." },
+  exit: { subject: "Confirming your enrollment status", body: "Hello {Student_Name}, this is {Educator_Name} from {Program_Name}. If you are not planning to return, please reply STOP so we can document an exit plan properly. If you want to return, reply YES." },
 };
 
 export function getStudentName(s: Student): string {

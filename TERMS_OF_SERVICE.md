@@ -4,11 +4,11 @@
 
 ## 1. Agreement to Terms
 
-By accessing or using Antigravity (“Service”), you agree to these Terms. If you do not agree, do not use the Service.
+By accessing or using Soulvision LLC (“Service”), you agree to these Terms. If you do not agree, do not use the Service.
 
 ## 2. Description of Service
 
-Antigravity provides AI-powered tools that generate structured creative outputs, design systems, and related digital content. Outputs are generated automatically using artificial intelligence systems.
+Soulvision LLC provides AI-powered tools that generate structured creative outputs, design systems, and related digital content. Outputs are generated automatically using artificial intelligence systems.
 
 ## 3. Eligibility
 
@@ -44,7 +44,7 @@ We do not guarantee:
 - Legal compliance
 - Fitness for any specific purpose
 
-Outputs are provided “as is.” You are solely responsible for reviewing and validating outputs before use. Antigravity is not liable for damages resulting from reliance on AI-generated content.
+Outputs are provided “as is.” You are solely responsible for reviewing and validating outputs before use. Soulvision LLC is not liable for damages resulting from reliance on AI-generated content.
 
 ## 7. Intellectual Property
 
@@ -76,11 +76,11 @@ We may suspend or terminate access if you violate these Terms. You may cancel at
 ## 10. Limitation of Liability
 
 To the fullest extent permitted by law:
-Antigravity shall not be liable for indirect, incidental, consequential, or special damages. Total liability shall not exceed the amount paid in the prior 12 months.
+Soulvision LLC shall not be liable for indirect, incidental, consequential, or special damages. Total liability shall not exceed the amount paid in the prior 12 months.
 
 ## 11. Indemnification
 
-You agree to indemnify and hold harmless Antigravity from claims arising from:
+You agree to indemnify and hold harmless Soulvision LLC from claims arising from:
 
 - Your use of the Service
 - Your misuse of AI outputs

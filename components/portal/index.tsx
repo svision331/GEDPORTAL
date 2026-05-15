@@ -1,7 +1,7 @@
-export default function EducatorOutreachPortal_Antigravity({ session }: { session: any }) {
+export default function EducatorOutreachPortal({ session }: { session: any }) {
   useDarkModeTime();
   const [program, setProgram] = useState<"GED Reconnect" | "ESL Bridge" | "Workforce Launch">("GED Reconnect");
-  const [tab, setTab] = useState<"Dashboard" | "Roster" | "Templates" | "Outreach" | "Analytics" | "Audit" | "Mobile">("Dashboard");
+  const [tab, setTab] = useState<"Dashboard" | "Roster" | "Outreach" | "Calendar" | "Reports">("Dashboard");
   const [students, setStudents] = useState<Student[]>([]);
   const [auditLog, setAuditLog] = useState<AuditEntry[]>([]);
   const [query, setQuery] = useState("");
@@ -148,7 +148,7 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
   async function logAudit(entry: Omit<AuditEntry, "id" | "timestamp" | "actor">) {
     const newEntry = {
       ...entry,
-      actor: "Mr. Caldwell",
+      actor: session?.user?.name || "Educator",
       timestamp: new Date().toISOString()
     };
     const dbEntry = await dbCreateAuditEntry(newEntry as any);
@@ -459,11 +459,10 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
             setBody(t.body);
             setTone(t.tone);
           }}
-          onSendTest={() => alert(`Test message sent to ${session?.user?.email || "you"}! Check your inbox for the ${tone} draft.`)}
+          onSendTest={() => showToast(`Test message drafted for ${session?.user?.email || "your inbox"} — configure Resend in AI Settings to send for real.`, "info")}
         /> : null}
       {tab === "Calendar" ? <CalendarView students={students} onOpenStudent={id => setActiveStudentId(id)} /> : null}
       {tab === "Reports" ? <ReportsView students={students} auditLog={auditLog} onFilterStatus={s => { setStatusFilter(s); setTab("Roster"); }} privacyMode={privacyMode} maskPII={maskPII} isAdmin={isAdmin} onExportPDF={exportPDFReport} onExportCSV={exportReport} /> : null}
-      {tab === "Mobile" ? <MobileDemoView students={students} onTabChange={t => setTab(t)} onOpenStudent={id => setActiveStudentId(id)} privacyMode={privacyMode} maskPII={maskPII} /> : null}
 
       <Modal open={!!activeStudent} title={activeStudent ? `Student Profile — ${privacyMode ? maskPII(getStudentName(activeStudent), "name") : getStudentName(activeStudent)}` : "Student Profile"} onClose={() => setActiveStudentId(null)} footer={activeStudent ? (
         <div style={{ display: "flex", width: "100%", justifyContent: "space-between", alignItems: "center" }}>
@@ -790,8 +789,8 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
                 <div style={{ fontSize: 13, color: COLORS.textSecondary }}>Hello? Who is this?</div>
               </div>
               <div style={{ padding: "8px 12px", background: "rgba(15,23,42,0.05)", borderRadius: RADII.sm, border: `1px solid ${COLORS.borderStrong}`, width: "fit-content", maxWidth: "80%", marginLeft: "auto", borderBottomRightRadius: 4 }}>
-                <div style={{ fontSize: 10, fontWeight: 800, color: COLORS.navy, marginBottom: 2 }}>You (Mr. Caldwell)</div>
-                <div style={{ fontSize: 13, color: COLORS.textPrimary }}>Hi, this is Mr. Caldwell from the GED program. I'm calling to see if you needed any help enrolling in classes this semester.</div>
+                <div style={{ fontSize: 10, fontWeight: 800, color: COLORS.navy, marginBottom: 2 }}>You ({session?.user?.name || "Educator"})</div>
+                <div style={{ fontSize: 13, color: COLORS.textPrimary }}>Hi, this is {session?.user?.name || "your educator"} from the GED program. I'm calling to see if you needed any help enrolling in classes this semester.</div>
               </div>
               <div style={{ fontSize: 12, fontStyle: "italic", color: COLORS.textMuted, textAlign: "center", marginTop: 8 }}>Awaiting response...</div>
             </div>

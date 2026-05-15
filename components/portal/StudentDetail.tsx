@@ -33,7 +33,7 @@ function CommunicationTimeline({ studentId, auditLog }: { studentId: string; aud
 }
 
 function StudentDetail({ student, programName, template, onClose, onSend, auditLog, onUpdate, currentUser }: { student: Student; programName: string; template: { subject: string; body: string }; onClose: () => void; onSend: (id: string) => void; auditLog: AuditEntry[]; onUpdate: (id: string, data: Partial<Student>) => void; currentUser?: { id: string; name?: string } }) {
-  const msgEnglish = formatTemplate(template.body, student, programName);
+  const msgEnglish = formatTemplate(template.body, student, programName, currentUser?.name);
   const { translated: msgNative, loading: translating } = useTranslation(msgEnglish, student.language);
   
   const isWorking = student.activeWorkerId === currentUser?.id;
@@ -104,7 +104,7 @@ function StudentDetail({ student, programName, template, onClose, onSend, auditL
                 style={{ ...inputStyle(), padding: "6px 10px", fontSize: 12, width: 140 }}
               />
             </div>
-            <HoverableButton style={btn({ variant: "outline" })} onClick={() => alert("Generating PDF: Preparing physical outreach letter for mailing...")}>Print Letter</HoverableButton>
+            <HoverableButton style={btn({ variant: "outline" })} onClick={() => window.print()} title="Print a physical outreach letter for mailing">Print Letter</HoverableButton>
           </div>
         </Card>
       </div>
