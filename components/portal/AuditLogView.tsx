@@ -5,7 +5,8 @@ import { COLORS, SEMANTIC, SHADOWS, RADII, STATUS_CONFIG, Student, AuditEntry, L
 
 function AuditLogView({ auditLog, privacyMode, maskPII }: { auditLog: AuditEntry[]; privacyMode: boolean; maskPII: any }) {
   const [filter, setFilter] = useState("all");
-
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [simSuccess, setSimSuccess] = useState(false);
 
   async function simulateSMS() {
@@ -35,20 +36,33 @@ function AuditLogView({ auditLog, privacyMode, maskPII }: { auditLog: AuditEntry
   }
 
   const filtered = useMemo(() => {
-    if (filter === "all") return auditLog;
-    return auditLog.filter(a => a.type === filter);
-  }, [auditLog, filter]);
+    return auditLog.filter(a => {
+      if (filter !== "all" && a.type !== filter) return false;
+      if (dateFrom && new Date(a.timestamp) < new Date(dateFrom)) return false;
+      if (dateTo && new Date(a.timestamp) > new Date(dateTo + "T23:59:59")) return false;
+      return true;
+    });
+  }, [auditLog, filter, dateFrom, dateTo]);
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ display: "flex", gap: 8, background: COLORS.chipBg, padding: 4, borderRadius: RADII.md }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 6, background: COLORS.chipBg, padding: 4, borderRadius: RADII.md }}>
             {["all", "outreach", "import", "compliance", "system"].map(t => (
-              <button key={t} onClick={() => setFilter(t)} style={{ padding: "6px 16px", borderRadius: RADII.sm, border: "none", background: filter === t ? COLORS.white : "transparent", color: filter === t ? COLORS.navy : COLORS.textMuted, fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: filter === t ? SHADOWS.card : "none", textTransform: "capitalize" }}>{t}</button>
+              <button key={t} onClick={() => setFilter(t)} style={{ padding: "5px 14px", borderRadius: RADII.sm, border: "none", background: filter === t ? COLORS.white : "transparent", color: filter === t ? COLORS.navy : COLORS.textMuted, fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: filter === t ? SHADOWS.card : "none", textTransform: "capitalize" }}>{t}</button>
             ))}
           </div>
-          <span style={{ background: SEMANTIC.warning, color: "#fff", padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 900, letterSpacing: "0.05em" }}>DEMO MODE</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <Muted style={{ fontSize: 11, whiteSpace: "nowrap" }}>From:</Muted>
+            <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} style={{ ...inputStyle(), padding: "5px 8px", fontSize: 11, width: 130 }} />
+            <Muted style={{ fontSize: 11 }}>To:</Muted>
+            <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} style={{ ...inputStyle(), padding: "5px 8px", fontSize: 11, width: 130 }} />
+            {(dateFrom || dateTo) && (
+              <button onClick={() => { setDateFrom(""); setDateTo(""); }} style={{ fontSize: 11, fontWeight: 700, color: SEMANTIC.danger, background: "none", border: "none", cursor: "pointer", padding: "2px 6px" }}>✕ Clear</button>
+            )}
+          </div>
+          <Muted style={{ fontSize: 11 }}>{filtered.length} {filtered.length === 1 ? "entry" : "entries"}</Muted>
         </div>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           {simSuccess && (

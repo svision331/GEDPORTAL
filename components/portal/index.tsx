@@ -34,11 +34,11 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
   const [privacyMode, setPrivacyMode] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [demoStep, setDemoStep] = useState<number | null>(null);
-  const [toasts, setToasts] = useState<{ id: number; message: string; type: "success" | "error" | "info" }[]>([]);
+  const [toasts, setToasts] = useState<{ id: number; message: string; type: "success" | "error" | "info"; onUndo?: () => void }[]>([]);
 
-  function showToast(message: string, type: "success" | "error" | "info" = "success") {
+  function showToast(message: string, type: "success" | "error" | "info" = "success", onUndo?: () => void) {
     const id = Date.now();
-    setToasts(prev => [...prev, { id, message, type }]);
+    setToasts(prev => [...prev, { id, message, type, onUndo }]);
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000);
   }
 
@@ -348,7 +348,12 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
       )}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
         <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-          <select value={program} onChange={e => setProgram(e.target.value as any)} style={{ padding: "10px 12px", borderRadius: 12, border: `1px solid ${COLORS.borderStrong}`, background: "rgba(255,255,255,0.75)", fontWeight: 800, color: COLORS.textPrimary }}>
+          <select value={program} onChange={e => {
+              const prev = program;
+              const next = e.target.value as any;
+              setProgram(next);
+              showToast(`Switched to ${next}`, "info", () => setProgram(prev));
+            }} style={{ padding: "10px 12px", borderRadius: 12, border: `1px solid ${COLORS.borderStrong}`, background: "rgba(255,255,255,0.75)", fontWeight: 800, color: COLORS.textPrimary }}>
             <option>GED Reconnect</option>
             <option>ESL Bridge</option>
             <option>Workforce Launch</option>
@@ -387,7 +392,12 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
             fontSize: 13
           }}>
             <span>{t.message}</span>
-            <button onClick={() => setToasts(prev => prev.filter(x => x.id !== t.id))} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.7)", cursor: "pointer", fontSize: 16 }}>×</button>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {t.onUndo && (
+                <button onClick={() => { t.onUndo!(); setToasts(prev => prev.filter(x => x.id !== t.id)); }} style={{ background: "rgba(255,255,255,0.2)", border: "none", color: "#fff", cursor: "pointer", fontSize: 11, fontWeight: 800, padding: "2px 8px", borderRadius: 4 }}>Undo</button>
+              )}
+              <button onClick={() => setToasts(prev => prev.filter(x => x.id !== t.id))} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.7)", cursor: "pointer", fontSize: 16 }}>×</button>
+            </div>
           </div>
         ))}
       </div>

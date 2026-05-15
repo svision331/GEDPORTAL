@@ -72,10 +72,11 @@ function TopBar({ title, subtitle, onExportReport, onOpenSettings, onStartDemo, 
             <span style={{ fontSize: 12 }}>🛡️</span> SECURE
           </div>
           <button 
-            onClick={() => { setPrivacyMode(!privacyMode); showToast(`Privacy Mode ${!privacyMode ? "Enabled" : "Disabled"}`); }}
-            style={{ display: "flex", alignItems: "center", gap: 6, background: privacyMode ? COLORS.navy : "rgba(148,163,184,0.1)", color: privacyMode ? "#fff" : COLORS.textPrimary, padding: "5px 12px", borderRadius: RADII.full, fontSize: 11, fontWeight: 800, border: "none", cursor: "pointer", transition: "all 0.2s" }}
+            onClick={() => { setPrivacyMode(!privacyMode); showToast(`Privacy Mode ${!privacyMode ? "On — PII masked" : "Off — PII visible"}`); }}
+            title={privacyMode ? "Privacy Mode is ON — click to show PII" : "Privacy Mode is OFF — click to mask PII"}
+            style={{ display: "flex", alignItems: "center", gap: 6, background: privacyMode ? COLORS.navy : "rgba(148,163,184,0.1)", color: privacyMode ? "#fff" : COLORS.textMuted, padding: "5px 12px", borderRadius: RADII.full, fontSize: 11, fontWeight: 800, border: `1px solid ${privacyMode ? "transparent" : COLORS.border}`, cursor: "pointer", transition: "all 0.2s" }}
           >
-            {privacyMode ? "👁️ Show" : "🙈 Mask"}
+            {privacyMode ? "🔒 Privacy On" : "🔓 Privacy Off"}
           </button>
           <Chip label={role === "ADMIN" ? "Admin Mode" : "Educator Access"} color={role === "ADMIN" ? COLORS.teal : COLORS.navyLight} />
           <HoverableButton onClick={onExportReport} style={btn({ variant: "outline" })}>⬇ Export Report</HoverableButton>
