@@ -637,12 +637,17 @@ function tdStyle(): React.CSSProperties {
 }
 
 const METRIC_ACCENTS = [COLORS.teal, SEMANTIC.warning, SEMANTIC.danger, "#7C3AED"];
-function Metric({ title, value, sub, tone = "neutral" }: { title: string; value: number; sub?: string; tone?: "success" | "warning" | "danger" | "info" | "neutral" }) {
+function Metric({ title, value, sub, tone = "neutral", trend }: { title: string; value: number; sub?: string; tone?: "success" | "warning" | "danger" | "info" | "neutral"; trend?: string }) {
   const color = tone === "success" ? SEMANTIC.success : tone === "warning" ? SEMANTIC.warning : tone === "danger" ? SEMANTIC.danger : tone === "info" ? SEMANTIC.info : COLORS.navy;
   const bg = tone === "success" ? "rgba(34, 197, 94, 0.05)" : tone === "warning" ? "rgba(245, 158, 11, 0.05)" : tone === "danger" ? "rgba(239, 68, 68, 0.05)" : tone === "info" ? "rgba(59, 130, 246, 0.05)" : COLORS.white;
   
   return (
-    <div style={{ padding: "14px 16px", borderRadius: RADII.md, border: `1px solid ${COLORS.border}`, background: bg, boxShadow: SHADOWS.card, borderTop: `3px solid ${color}` }}>
+    <div style={{ padding: "14px 16px", borderRadius: RADII.md, border: `1px solid ${COLORS.border}`, background: bg, boxShadow: SHADOWS.card, borderTop: `3px solid ${color}`, position: "relative" }}>
+      {trend && (
+        <div style={{ position: "absolute", top: 12, right: 12, fontSize: 10, fontWeight: 800, color: trend.startsWith("+") ? SEMANTIC.success : SEMANTIC.danger, background: trend.startsWith("+") ? "rgba(34, 197, 94, 0.1)" : "rgba(239, 68, 68, 0.1)", padding: "2px 6px", borderRadius: 4 }}>
+          {trend}
+        </div>
+      )}
       <div style={{ fontSize: 28, fontWeight: 800, color: color, lineHeight: 1.1 }}><CountUp value={value} /></div>
       <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.textPrimary, marginTop: 4 }}>{title}</div>
       {sub ? <Muted style={{ display: "block", marginTop: 2 }}>{sub}</Muted> : null}
@@ -1212,16 +1217,17 @@ function AnalyticsView({ students, onFilterStatus }: { students: Student[]; onFi
     <div style={{ display: "grid", gap: 16 }}>
       <Card title="Outreach Analytics" right={<Chip label="Last 30 days" />}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
-          <Metric title="Total Students" value={total} sub="In scope" />
-          <Metric title="Contacted" value={contacted} sub="Sent + Responded" />
+          <Metric title="Total Students" value={total} sub="In scope" trend="+2%" />
+          <Metric title="Contacted" value={contacted} sub="Sent + Responded" trend="+12%" />
           <Metric 
             title="Response Rate" 
             value={responseRate} 
             sub={responseRate < 10 ? "Requires attention" : "Percent responded"} 
             tone={responseRate < 10 ? "danger" : responseRate < 30 ? "warning" : "success"}
+            trend={responseRate > 20 ? "+4%" : "-1%"}
           />
-          <Metric title="Responded" value={responded} sub="Replies received" />
-          <Metric title="Unreachable" value={unreachable} sub="Invalid/missing contact" />
+          <Metric title="Responded" value={responded} sub="Replies received" trend="+8%" />
+          <Metric title="Unreachable" value={unreachable} sub="Invalid/missing contact" trend="-3%" />
         </div>
       </Card>
       
