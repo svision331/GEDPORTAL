@@ -1427,19 +1427,25 @@ function AuditLogView({ auditLog }: { auditLog: AuditEntry[] }) {
 }
 
 function MobileDemoView({ students, onTabChange, onOpenStudent }: { students: Student[]; onTabChange: (t: any) => void; onOpenStudent: (id: string) => void }) {
-  const todays = students.filter(s => s.status === "Not Contacted" || s.status === "Pending").slice(0, 5);
-  const recent = students.slice(0, 3);
+  const allToContact = students.filter(s => s.status === "Not Contacted" || s.status === "Pending");
+  const todays = allToContact.slice(0, 5);
+  const recent = students.slice(0, 5);
   return (
-    <div style={{ display: "grid", placeItems: "center" }}>
-      <div style={{ width: 360, borderRadius: 28, border: `1px solid ${COLORS.border}`, boxShadow: "0 20px 60px rgba(0,0,0,0.12)", background: COLORS.white, overflow: "hidden" }}>
+    <div style={{ display: "grid", gap: 20, placeItems: "center" }}>
+      <div style={{ textAlign: "center", maxWidth: 400 }}>
+        <div style={{ fontWeight: 900, color: COLORS.navy, fontSize: 18 }}>Mobile App Simulation</div>
+        <Muted style={{ fontSize: 13 }}>Experience how the portal translates to a native mobile environment for field outreach.</Muted>
+      </div>
+      <div style={{ width: 360, height: 640, borderRadius: 32, border: `8px solid ${COLORS.navy}`, boxShadow: "0 40px 100px rgba(15,23,42,0.25)", background: COLORS.white, overflow: "hidden", position: "relative", display: "flex", flexDirection: "column" }}>
         <div style={{ padding: 16, borderBottom: `1px solid ${COLORS.border}` }}>
           <div style={{ fontWeight: 900 }}>GED Reconnect</div>
           <Muted>Mobile outreach workflow</Muted>
         </div>
-        <div style={{ padding: 16, display: "grid", gap: 14 }}>
-          <Card title="Today's Task" style={{ boxShadow: "none" }}>
+        <div style={{ padding: 16, display: "grid", gap: 14, flex: 1, overflowY: "auto" }}>
+          <Card title="Outreach Focus" style={{ boxShadow: "none", border: `1px solid ${COLORS.border}` }}>
             <div style={{ display: "grid", gap: 10 }}>
-              <div style={{ fontWeight: 900 }}>{todays.length} students to contact</div>
+              <div style={{ fontWeight: 900, color: COLORS.navy }}>{allToContact.length} students pending</div>
+              <Muted style={{ fontSize: 11 }}>You have {allToContact.length} students awaiting their first contact or follow-up.</Muted>
               <HoverableButton style={btn({ variant: "primary" })} onClick={() => onTabChange("Roster")}>Start Outreach</HoverableButton>
             </div>
           </Card>
@@ -1454,11 +1460,23 @@ function MobileDemoView({ students, onTabChange, onOpenStudent }: { students: St
             </div>
           </Card>
         </div>
-        <div style={{ padding: 14, borderTop: `1px solid ${COLORS.border}`, display: "flex", justifyContent: "space-between" }}>
-          <button onClick={() => onTabChange("Dashboard")} style={btn({ variant: "ghost" })}>Home</button>
-          <button onClick={() => onTabChange("Roster")} style={btn({ variant: "ghost" })}>Roster</button>
-          <button onClick={() => onTabChange("Outreach")} style={btn({ variant: "ghost" })}>Send</button>
-          <button onClick={() => onTabChange("Audit")} style={btn({ variant: "ghost" })}>Logs</button>
+        <div style={{ padding: "8px 12px", borderTop: `1px solid ${COLORS.border}`, display: "flex", justifyContent: "space-around", background: "#f8fafc" }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, cursor: "pointer" }} onClick={() => onTabChange("Dashboard")}>
+            <span style={{ fontSize: 18 }}>🏠</span>
+            <span style={{ fontSize: 9, fontWeight: 800, color: COLORS.teal }}>Dashboard</span>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, cursor: "pointer" }} onClick={() => onTabChange("Roster")}>
+            <span style={{ fontSize: 18 }}>📋</span>
+            <span style={{ fontSize: 9, fontWeight: 800, color: COLORS.textMuted }}>Roster</span>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, cursor: "pointer" }} onClick={() => onTabChange("Outreach")}>
+            <span style={{ fontSize: 18 }}>✉️</span>
+            <span style={{ fontSize: 9, fontWeight: 800, color: COLORS.textMuted }}>Outreach</span>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, cursor: "pointer" }} onClick={() => onTabChange("Audit")}>
+            <span style={{ fontSize: 18 }}>⚖️</span>
+            <span style={{ fontSize: 9, fontWeight: 800, color: COLORS.textMuted }}>Audit</span>
+          </div>
         </div>
       </div>
     </div>
