@@ -7,3 +7,10 @@ dist
 .env.test.local
 .env.production.local
 .agent/
+
+/src/generated/prisma
+.next/
+dev.db
+*.png
+.env*
+! .env.example

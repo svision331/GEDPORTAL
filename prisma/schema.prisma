@@ -1,0 +1,52 @@
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Student {
+  id                 String       @id @default(cuid())
+  name               String
+  language           String
+  status             String
+  lastSeen           DateTime?
+  email              String?
+  phone              String?
+  address            String?
+  languageConfidence String?      @default("Auto-detected")
+  notes              String?
+  auditEntries       AuditEntry[]
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+}
+
+model AuditEntry {
+  id          String   @id @default(cuid())
+  timestamp   DateTime @default(now())
+  actor       String
+  action      String
+  studentId   String?
+  studentName String?
+  details     String
+  type        String
+  student     Student? @relation(fields: [studentId], references: [id])
+}
+
+model Setting {
+  id    String @id
+  value String
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  password      String?
+  role          String    @default("EDUCATOR")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}

@@ -1,14 +1,24 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+"use client";
 
-type Language = "Spanish" | "Ukrainian" | "Chinese" | "Russian" | "Filipino" | "Fula" | "Malinké" | "Mayan" | "Persian" | "French" | "English" | "Arabic" | "Portuguese" | "Hindi" | "Bengali" | "Urdu" | "Vietnamese" | "Korean" | "Japanese" | "Turkish" | "Polish" | "Romanian" | "Dutch" | "Italian" | "German" | "Haitian Creole" | "Somali" | "Amharic" | "Swahili" | "Hmong" | "Khmer" | "Lao" | "Burmese" | "Nepali" | "Pashto";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+const logoImg = "/logo.webp";
+import { getStudents, updateStudent as dbUpdateStudent, createStudent as dbCreateStudent, createAuditEntry as dbCreateAuditEntry, getAuditLogs, saveSetting, getSetting, sendOutreach } from "@/app/actions";
+import { parseViaAI, translateViaAI, getRiskAssessment } from "@/app/ai-actions";
+import type { RiskAssessment } from "@/lib/aiService";
+import { signOut } from "next-auth/react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+
+export type Language = "Spanish" | "Ukrainian" | "Chinese" | "Russian" | "Filipino" | "Fula" | "Malinké" | "Mayan" | "Persian" | "French" | "English" | "Arabic" | "Portuguese" | "Hindi" | "Bengali" | "Urdu" | "Vietnamese" | "Korean" | "Japanese" | "Turkish" | "Polish" | "Romanian" | "Dutch" | "Italian" | "German" | "Haitian Creole" | "Somali" | "Amharic" | "Swahili" | "Hmong" | "Khmer" | "Lao" | "Burmese" | "Nepali" | "Pashto";
 type Status = "Not Contacted" | "Pending" | "Sent" | "Responded" | "SMS Required" | "Unreachable";
 type OutreachChannel = "Email" | "SMS" | "Call" | "Letter";
-type Student = { id: string; name: string; language: Language; status: Status; lastSeen?: string; email?: string; phone?: string; address?: string; languageConfidence?: "Auto-detected" | "Verified"; notes?: string; };
+export type Student = { id: string; name: string; language: Language; status: Status; lastSeen?: string; email?: string; phone?: string; address?: string; languageConfidence?: "Auto-detected" | "Verified"; notes?: string; };
 type AuditEntry = { id: string; timestamp: string; actor: string; action: string; studentId?: string; studentName?: string; details: string; type: "outreach" | "system" | "import" | "compliance" };
 type TemplateTone = "neutral" | "encouraging" | "urgent" | "exit";
 
-const COLORS = { navy: "#1F3A5F", navyDark: "#162d4a", navyLight: "#2a4d7a", teal: "#0891B2", tealLight: "#22D3EE", tealBg: "rgba(8,145,178,0.08)", bg: "#F0F4F8", white: "#FFFFFF", border: "rgba(15,23,42,0.08)", borderStrong: "rgba(15,23,42,0.14)", textPrimary: "#0F172A", textSecondary: "#334155", textMuted: "#64748B", chipBg: "rgba(31,58,95,0.07)" };
-const SEMANTIC = { danger: "#DC2626", warning: "#D97706", success: "#16A34A", info: "#2563EB" };
+const COLORS = { navy: "var(--navy)", navyDark: "var(--navy-dark)", navyLight: "var(--navy-light)", teal: "var(--teal)", tealLight: "var(--teal-light)", tealBg: "var(--teal-bg)", bg: "var(--bg)", white: "var(--surface)", border: "var(--border)", borderStrong: "var(--border-strong)", textPrimary: "var(--text-primary)", textSecondary: "var(--text-secondary)", textMuted: "var(--text-muted)", chipBg: "var(--chip-bg)" };
+const SEMANTIC = { danger: "var(--danger)", warning: "var(--warning)", success: "var(--success)", info: "var(--info)" };
 const SHADOWS = { card: "0 1px 3px rgba(15,23,42,0.06),0 1px 2px rgba(15,23,42,0.04)", hover: "0 12px 32px rgba(15,23,42,0.12),0 4px 8px rgba(15,23,42,0.06)", modal: "0 24px 64px rgba(15,23,42,0.18),0 8px 16px rgba(15,23,42,0.08)" };
 const RADII = { sm: 8, md: 12, lg: 16, xl: 20, full: 9999 };
 
@@ -241,89 +251,180 @@ function CookieBanner() {
 }
 
 const TOS_CONTENT = `
-**Last Updated:** [Insert Date]
+# TERMS OF SERVICE
 
-**1. Agreement to Terms**
+**Last Updated:** May 2026
+
+## 1. Agreement to Terms
+
 By accessing or using Antigravity (“Service”), you agree to these Terms. If you do not agree, do not use the Service.
 
-**2. Description of Service**
+## 2. Description of Service
+
 Antigravity provides AI-powered tools that generate structured creative outputs, design systems, and related digital content. Outputs are generated automatically using artificial intelligence systems.
 
-**3. Eligibility**
+## 3. Eligibility
+
 You must be at least 18 years old to use the Service.
 
-**4. Accounts**
-You are responsible for: Maintaining account security, all activity under your account, and keeping login credentials confidential. We may suspend accounts that violate these Terms.
+## 4. Accounts
 
-**5. Acceptable Use**
-You may not: Use the Service for unlawful purposes, reverse engineer the platform, attempt to extract training data, use outputs to build a competing AI model, or upload harmful/infringing content.
+You are responsible for:
 
-**6. AI Output Disclaimer**
-The Service generates content using artificial intelligence. We do not guarantee: Accuracy, Completeness, Legal compliance, or Fitness for any specific purpose. Outputs are provided “as is.” You are solely responsible for reviewing and validating outputs before use. Antigravity is not liable for damages resulting from reliance on AI-generated content.
+- Maintaining account security
+- All activity under your account
+- Keeping login credentials confidential
 
-**7. Intellectual Property**
-We retain all rights to: Software, Algorithms, Brand assets, and Platform infrastructure. Subject to your compliance with these Terms: You own the outputs generated for you. You grant us a limited license to use anonymized inputs for system improvement.
+We may suspend accounts that violate these Terms.
 
-**8. Payment and Subscription**
-If you purchase a subscription: Fees are billed in advance, subscriptions auto-renew unless canceled, refunds are provided only if required by law. Failure to pay may result in suspension.
+## 5. Acceptable Use
 
-**9. Termination**
+You may not:
+
+- Use the Service for unlawful purposes
+- Reverse engineer the platform
+- Attempt to extract training data
+- Use outputs to build a competing AI model
+- Upload harmful or infringing content
+
+## 6. AI Output Disclaimer
+
+The Service generates content using artificial intelligence.
+We do not guarantee:
+
+- Accuracy
+- Completeness
+- Legal compliance
+- Fitness for any specific purpose
+
+Outputs are provided “as is.” You are solely responsible for reviewing and validating outputs before use. Antigravity is not liable for damages resulting from reliance on AI-generated content.
+
+## 7. Intellectual Property
+
+We retain all rights to:
+
+- Software
+- Algorithms
+- Brand assets
+- Platform infrastructure
+
+Subject to your compliance with these Terms:
+
+- You own the outputs generated for you.
+- You grant us a limited license to use anonymized inputs for system improvement.
+
+## 8. Payment and Subscription
+
+If you purchase a subscription:
+
+- Fees are billed in advance
+- Subscriptions auto-renew unless canceled
+- Refunds are provided only if required by law
+- Failure to pay may result in suspension.
+
+## 9. Termination
+
 We may suspend or terminate access if you violate these Terms. You may cancel at any time.
 
-**10. Limitation of Liability**
-To the fullest extent permitted by law: Antigravity shall not be liable for indirect, incidental, consequential, or special damages. Total liability shall not exceed the amount paid in the prior 12 months.
+## 10. Limitation of Liability
 
-**11. Indemnification**
-You agree to indemnify and hold harmless Antigravity from claims arising from: Your use of the Service, your misuse of AI outputs, your violation of these Terms.
+To the fullest extent permitted by law:
+Antigravity shall not be liable for indirect, incidental, consequential, or special damages. Total liability shall not exceed the amount paid in the prior 12 months.
 
-**12. Dispute Resolution**
-All disputes shall be resolved through binding arbitration in [New Jersey or New York]. No class actions permitted.
+## 11. Indemnification
 
-**13. Governing Law**
-These Terms are governed by the laws of the State of [NJ or NY].
+You agree to indemnify and hold harmless Antigravity from claims arising from:
 
-**14. Force Majeure**
-Antigravity shall not be liable for any failure or delay in performance under these Terms for causes beyond its reasonable control, including but not limited to labor disputes, acts of God, or internet outages.
+- Your use of the Service
+- Your misuse of AI outputs
+- Your violation of these Terms
+
+## 12. Dispute Resolution
+
+All disputes shall be resolved through binding arbitration in Newark, New Jersey. No class actions permitted.
+
+## 13. Governing Law
+
+These Terms are governed by the laws of the State of New Jersey.
+
+## 14. Changes to Terms
+
+We may update these Terms at any time. Continued use constitutes acceptance.
+
+---
+*Note: This is founder-grade protection. A lawyer can refine it later.*
 `;
 const PRIVACY_POLICY_CONTENT = `
+# Privacy Policy
+
 **Last Updated:** February 2026
 
 Antigravity ("we", "us", or "our") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use the Educator Outreach Portal (the "Service").
 
 By using the Service, you consent to the data practices described in this policy.
 
-**1. Information We Collect**
-*   **Account Information:** When you register, we may collect your name, email address, and institutional affiliation (if applicable).
-*   **Student Data Inputs:** The Service processes the student data you input or upload (e.g., student names, contact information, language preferences, attendance data) strictly for the purpose of generating outreach communications. 
-*   **Communication Content:** We process the content of the templates, subjects, and body texts you create within the platform.
-*   **Usage Data:** We may collect anonymous data about how you interact with the Service (e.g., time spent on pages, buttons clicked, errors encountered) to improve performance and user experience.
+## 1. Information We Collect
 
-**2. How We Use Your Information**
-*   **Providing the Core Service:** To process your student rosters, generate translated outreach drafts, and facilitate communication tracking.
-*   **Service Improvement:** To analyze usage trends, fix bugs, and optimize the platform's features (e.g., improving language detection accuracy).
-*   **AI Model Training (Anonymized Data Only):** We **do not** use personally identifiable student data to train our core AI models. We may use highly anonymized, aggregated usage patterns and non-sensitive generic inputs (like generalized template structures) to improve the general performance of our natural language processing systems.
-*   **Communication:** To send you technical notices, security alerts, and administrative messages.
+We collect information that you provide directly to us when using the Service:
 
-**3. Data Sharing and Disclosure**
-We respect the sensitive nature of educational data. We do not sell, rent, or trade your personal information or your students' data to third parties for their marketing purposes. We may share your information only in the following limited circumstances:
-*   **Essential Service Providers:** We may share data with trusted third-party vendors who perform services on our behalf (e.g., translation providers like MyMemory API, payment processors like Stripe).
-*   **Legal Compliance:** We may disclose information if required to do so by law or in the good-faith belief that such action is necessary to comply with state and federal laws (such as FERPA, where applicable).
-*   **Business Transfers:** If we are involved in a merger, acquisition, or sale, your information may be transferred as part of that transaction.
+* **Account Information:** When you register, we may collect your name, email address, and institutional affiliation (if applicable).
+* **Student Data Inputs:** The Service processes the student data you input or upload (e.g., student names, contact information, language preferences, attendance data) strictly for the purpose of generating outreach communications.
+* **Communication Content:** We process the content of the templates, subjects, and body texts you create within the platform.
+* **Usage Data:** We may collect anonymous data about how you interact with the Service (e.g., time spent on pages, buttons clicked, errors encountered) to improve performance and user experience.
 
-**4. Third-Party AI Services**
+## 2. How We Use Your Information
+
+We use the information we collect primarily to provide, maintain, and improve the Service:
+
+* **Providing the Core Service:** To process your student rosters, generate translated outreach drafts, and facilitate communication tracking.
+* **Service Improvement:** To analyze usage trends, fix bugs, and optimize the platform's features (e.g., improving language detection accuracy).
+* **AI Model Training (Anonymized Data Only):** We **do not** use personally identifiable student data to train our core AI models. We may use highly anonymized, aggregated usage patterns and non-sensitive generic inputs (like generalized template structures) to improve the general performance of our natural language processing systems.
+* **Communication:** To send you technical notices, security alerts, and administrative messages.
+
+## 3. Data Sharing and Disclosure
+
+We respect the sensitive nature of educational data. We do not sell, rent, or trade your personal information or your students' data to third parties for their marketing purposes.
+
+We may share your information only in the following limited circumstances:
+
+* **Essential Service Providers:** We may share data with trusted third-party vendors who perform services on our behalf, such as translation API providers (e.g., MyMemory API), hosting services, and payment processors (e.g., Stripe). These providers are bound by confidentiality obligations and are restricted from using the data for any purpose other than providing these services to us.
+* **Legal Compliance:** We may disclose information if required to do so by law or in the good-faith belief that such action is necessary to comply with state and federal laws (such as FERPA, where applicable).
+* **Business Transfers:** If we are involved in a merger, acquisition, or sale of all or a portion of our assets, your information may be transferred as part of that transaction.
+
+## 4. Third-Party AI Services
+
 The Service utilizes third-party artificial intelligence and translation APIs to generate content. When you submit text for translation or generation, that specific text is transmitted to our API partners. We use providers that adhere to strict data security standards and generally do not retain or use your inputs to train their public models. However, you acknowledge that AI processing inherently involves data transmission over the internet.
 
-**5. Security of Your Information**
-We use administrative, technical, and physical security measures to help protect your personal information and student data. This includes HTTPS encryption in transit. While we have taken reasonable steps to secure the personal information you provide to us, please be aware that no security measures are perfect or impenetrable.
+## 5. Security of Your Information
 
-**6. Cookies and Tracking Technologies**
-We may use cookies and similar tracking technologies on the Service to help customize the Site and improve your experience. You can remove or reject cookies, but be aware that such action could affect the availability and functionality of the Service. 
+We use administrative, technical, and physical security measures to help protect your personal information and student data. This includes HTTPS encryption in transit. While we have taken reasonable steps to secure the personal information you provide to us, please be aware that despite our efforts, no security measures are perfect or impenetrable, and no method of data transmission can be guaranteed against any interception or other type of misuse.
 
-**7. Your Data Rights**
-Depending on your location, you may have the right to request access to, correction of, or deletion of the personal information we hold about you. To exercise these rights, please contact us.
+## 6. Cookies and Tracking Technologies
 
-**8. Contact Us**
-If you have questions or comments about this Privacy Policy or our data practices, please contact us at: [Insert Email Address].
+We may use cookies and similar tracking technologies on the Service to help customize the Site and improve your experience. Most browsers are set to accept cookies by default. You can remove or reject cookies, but be aware that such action could affect the availability and functionality of the Service.
+
+## 7. Your Data Rights
+
+Depending on your location, you may have the right to request access to, correction of, or deletion of the personal information we hold about you. You may also have the right to object to or restrict certain processing activities.
+
+To exercise these rights, or if you wish to delete your account and associated data, please contact us using the information provided below.
+
+## 8. Children’s Privacy
+
+The Service is intended for use by educators and administrators. We do not knowingly collect personally identifiable information directly from children under the age of 13. If you become aware that a child under 13 has provided us with personal information, please contact us immediately.
+
+## 9. Changes to This Privacy Policy
+
+We may update this Privacy Policy from time to time in order to reflect changes to our practices or for other operational, legal, or regulatory reasons. We will notify you of any material changes by posting the new Privacy Policy on this page and updating the "Last Updated" date.
+
+## 10. Contact Us
+
+If you have questions or comments about this Privacy Policy or our data practices, please contact us at:
+
+**Antigravity Legal**
+100 Innovation Way
+Newark, NJ 07102
+legal@gedportal.edu
 `;
 
 const DMCA_POLICY_CONTENT = `
@@ -347,16 +448,17 @@ If you are a copyright owner, authorized to act on behalf of one, or authorized 
 Deliver this Notice, with all items completed, to Antigravity's Designated Copyright Agent:
 
 **Copyright Agent**
-Antigravity
-[Insert Address]
-[Insert Email Address]
+Antigravity Legal
+100 Innovation Way
+Newark, NJ 07102
+legal@gedportal.edu
 
 **2. Counter-Notice**
 If you believe that your content that was removed (or to which access was disabled) is not infringing, or that you have the authorization from the copyright owner, the copyright owner's agent, or pursuant to the law, to post and use the material in your content, you may send a counter-notice containing the following information to the Copyright Agent:
 *   Your physical or electronic signature;
 *   Identification of the content that has been removed or to which access has been disabled and the location at which the content appeared before it was removed or disabled;
 *   A statement that you have a good faith belief that the content was removed or disabled as a result of mistake or a misidentification of the content; and
-*   Your name, address, telephone number, and e-mail address, a statement that you consent to the jurisdiction of the federal court in [Insert Jurisdiction], and a statement that you will accept service of process from the person who provided notification of the alleged infringement.
+*   Your name, address, telephone number, and e-mail address, a statement that you consent to the jurisdiction of the federal court in Newark, New Jersey, and a statement that you will accept service of process from the person who provided notification of the alleged infringement.
 
 If a counter-notice is received by the Copyright Agent, Antigravity may send a copy of the counter-notice to the original complaining party informing that person that it may replace the removed content or cease disabling it in 10 business days. Unless the copyright owner files an action seeking a court order against the content provider, member or user, the removed content may be replaced, or access to it restored, in 10 to 14 business days or more after receipt of the counter-notice, at Antigravity's sole discretion.
 `;
@@ -381,7 +483,7 @@ We will review requests for refunds on a case-by-case basis. A refund *may* be g
 *   Required by applicable consumer protection laws in your jurisdiction.
 
 **4. How to Request a Refund**
-If you believe you are eligible for a refund under the exceptional circumstances listed above, please contact our support team at [Insert Email Address] within 14 days of the charge. Please include your account email address, a description of the issue, and any relevant documentation.
+If you believe you are eligible for a refund under the exceptional circumstances listed above, please contact our support team at legal@gedportal.edu within 14 days of the charge. Please include your account email address, a description of the issue, and any relevant documentation.
 
 **5. Changes to Fees**
 We reserve the right to change our subscription fees upon reasonable prior notice, which will be communicated to you via email or through the Service. Continued use of the Service after the fee change becomes effective constitutes your agreement to pay the modified fee.
@@ -394,11 +496,21 @@ function LegalModal({ open, type, onClose }: { open: boolean; type: "terms" | "p
 
   const title = type === "terms" ? "Terms of Service" : type === "privacy" ? "Privacy Policy" : type === "dmca" ? "DMCA Policy" : "Refund Policy";
 
-  // Basic markdown-to-html for paragraphs and bold text
+  // Basic markdown-to-html for paragraphs, bold text, headers, and lists
   const rawContent = type === "terms" ? TOS_CONTENT : type === "privacy" ? PRIVACY_POLICY_CONTENT : type === "dmca" ? DMCA_POLICY_CONTENT : REFUND_POLICY_CONTENT;
   const content = (rawContent || "").split('\n\n').map((p: string, i: number) => {
     if (!p) return null;
-    return <p key={i} dangerouslySetInnerHTML={{ __html: String(p).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} style={{ marginBottom: 12, lineHeight: 1.6, fontSize: 13, color: COLORS.textSecondary }} />
+    let html = String(p).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    if (html.startsWith('## ')) {
+      html = `<strong style="font-size: 15px; color: var(--navy); display: block; margin-top: 8px;">${html.replace('## ', '')}</strong>`;
+    } else if (html.startsWith('# ')) {
+      html = `<strong style="font-size: 18px; color: var(--navy); display: block; margin-top: 8px;">${html.replace('# ', '')}</strong>`;
+    } else {
+      // Process lists (starting with * or -)
+      html = html.replace(/\n\* /g, '<br/>• ').replace(/^\* /g, '• ');
+      html = html.replace(/\n- /g, '<br/>• ').replace(/^- /g, '• ');
+    }
+    return <p key={i} dangerouslySetInnerHTML={{ __html: html }} style={{ marginBottom: 12, lineHeight: 1.6, fontSize: 13, color: COLORS.textSecondary }} />
   });
 
   return (
@@ -452,23 +564,6 @@ const LANG_CODES: Record<Language, string> = {
 
 const translationCache = new Map<string, string>();
 
-async function translateViaMyMemory(text: string, targetLang: string): Promise<string> {
-  if (!text.trim()) return "";
-  const cacheKey = `${targetLang}:${text}`;
-  if (translationCache.has(cacheKey)) return translationCache.get(cacheKey)!;
-  try {
-    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|${targetLang}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    const translated: string = data.responseData?.translatedText ?? text;
-    translationCache.set(cacheKey, translated);
-    return translated;
-  } catch {
-    return text; // graceful fallback to English
-  }
-}
-
 function useTranslation(text: string, lang: Language): { translated: string; loading: boolean; error: boolean } {
   const [translated, setTranslated] = useState("");
   const [loading, setLoading] = useState(false);
@@ -479,7 +574,7 @@ function useTranslation(text: string, lang: Language): { translated: string; loa
     setLoading(true); setError(false);
     const timer = setTimeout(async () => {
       try {
-        const result = await translateViaMyMemory(text, code);
+        const result = await translateViaAI(text, lang, code);
         setTranslated(result);
         setError(false);
       } catch {
@@ -574,13 +669,13 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-function TopBar({ title, subtitle, onExportReport }: { title: string; subtitle?: string; onExportReport?: () => void }) {
+function TopBar({ title, subtitle, onExportReport, onOpenSettings, userName, role }: { title: string; subtitle?: string; onExportReport?: () => void; onOpenSettings: () => void; userName?: string; role?: string }) {
   return (
     <div style={{ position: "sticky", top: 0, zIndex: 30, background: "rgba(240,244,248,0.92)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", borderBottom: `1px solid ${COLORS.border}`, boxShadow: "0 1px 0 rgba(15,23,42,0.04)" }}>
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ width: 36, height: 36, borderRadius: RADII.sm, background: `linear-gradient(135deg, ${COLORS.navy}, ${COLORS.teal})`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 2px 8px rgba(31,58,95,0.3)" }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L3 7l9 5 9-5-9-5z" /><path d="M3 12l9 5 9-5" /><path d="M3 17l9 5 9-5" /></svg>
+            <img src={logoImg} alt="Logo" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit" }} />
           </div>
           <div>
             <div style={{ fontSize: 14, fontWeight: 800, color: COLORS.textPrimary, letterSpacing: "-0.01em" }}>{title}</div>
@@ -589,18 +684,27 @@ function TopBar({ title, subtitle, onExportReport }: { title: string; subtitle?:
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <Chip label="Secure" color={SEMANTIC.success} />
-          <Chip label="Audit-ready" color={COLORS.teal} />
+          <Chip label={role === "ADMIN" ? "Admin Mode" : "Educator Access"} color={role === "ADMIN" ? COLORS.teal : COLORS.navyLight} />
           <HoverableButton onClick={onExportReport} style={btn({ variant: "outline" })}>⬇ Export Report</HoverableButton>
+          {role === "ADMIN" && <HoverableButton onClick={onOpenSettings} style={btn({ variant: "outline" })}>⚙️ AI Settings</HoverableButton>}
+          <div style={{ width: 1, height: 24, background: COLORS.border, margin: "0 4px" }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.textPrimary }}>{userName || "Educator"}</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: "0.05em" }}>{role}</div>
+            </div>
+            <HoverableButton onClick={() => signOut()} style={btn({ variant: "ghost", danger: true })}>Log Out</HoverableButton>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-function AppShell({ children, title, subtitle, onExportReport, onOpenLegal }: { children: React.ReactNode; title: string; subtitle?: string; onExportReport?: () => void; onOpenLegal: (t: "terms" | "privacy" | "dmca" | "refund") => void }) {
+function AppShell({ children, title, subtitle, onExportReport, onOpenLegal, onOpenSettings, userName, role }: { children: React.ReactNode; title: string; subtitle?: string; onExportReport?: () => void; onOpenLegal: (t: "terms" | "privacy" | "dmca" | "refund") => void; onOpenSettings: () => void; userName?: string; role?: string }) {
   return (
     <div style={{ minHeight: "100vh", background: COLORS.bg, color: COLORS.textPrimary }}>
-      <TopBar title={title} subtitle={subtitle} onExportReport={onExportReport} />
+      <TopBar title={title} subtitle={subtitle} onExportReport={onExportReport} onOpenSettings={onOpenSettings} userName={userName} role={role} />
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "20px 20px 32px", minHeight: "calc(100vh - 160px)" }}>{children}</div>
       <Footer onOpenLegal={onOpenLegal} />
       <CookieBanner />
@@ -608,7 +712,7 @@ function AppShell({ children, title, subtitle, onExportReport, onOpenLegal }: { 
   );
 }
 
-function DashboardView({ focus, onPickFocus, stats }: { focus: { atRisk: number; missingContact: number; repliesWaiting: number }; onPickFocus: (key: string) => void; stats: { total: number; atRisk: number; smsRequired: number; unreachable: number } }) {
+function DashboardView({ focus, onPickFocus, stats, onSendEmail, onReviewDrafts, onDownloadLog }: { focus: { atRisk: number; missingContact: number; repliesWaiting: number }; onPickFocus: (key: string) => void; stats: { total: number; atRisk: number; smsRequired: number; unreachable: number }; onSendEmail: () => void; onReviewDrafts: () => void; onDownloadLog: () => void }) {
   return (
     <div style={{ display: "grid", gap: 16 }}>
       <Card title="Command Center" right={<Chip label="Last 30 days" />}>
@@ -628,9 +732,9 @@ function DashboardView({ focus, onPickFocus, stats }: { focus: { atRisk: number;
             <Card title="Action Required" style={{ background: `linear-gradient(135deg, rgba(31,58,95,0.04), rgba(8,145,178,0.06))`, border: `1px solid rgba(8,145,178,0.15)` }}>
               <div style={{ display: "grid", gap: 10 }}>
                 <Muted>Fast actions for weekly compliance and follow-through.</Muted>
-                <HoverableButton style={btn({ variant: "teal" })}>Send Mass Email</HoverableButton>
-                <HoverableButton style={btn({ variant: "outline" })}>Review Translated Drafts</HoverableButton>
-                <HoverableButton style={btn({ variant: "outline" })}>Download Supervisor Log</HoverableButton>
+                <HoverableButton style={btn({ variant: "teal" })} onClick={onSendEmail}>Send Mass Email</HoverableButton>
+                <HoverableButton style={btn({ variant: "outline" })} onClick={onReviewDrafts}>Review Translated Drafts</HoverableButton>
+                <HoverableButton style={btn({ variant: "outline" })} onClick={onDownloadLog}>Download Supervisor Log</HoverableButton>
               </div>
             </Card>
           </div>
@@ -638,9 +742,16 @@ function DashboardView({ focus, onPickFocus, stats }: { focus: { atRisk: number;
       </Card>
       <Card title="Attendance Alerts">
         <div style={{ display: "grid", gap: 10 }}>
-          <AlertRow title="3-month absence threshold reached" detail="5 students flagged • prioritize SMS for missing email" tone="warning" />
-          <AlertRow title="Missing contact info" detail="3 students need phone verification • recommend SMS outreach" tone="danger" />
-          <AlertRow title="New replies waiting" detail="2 responses received • review and update status" tone="info" />
+          {stats.atRisk > 0 && <AlertRow title="3-month absence threshold reached" detail={`${stats.atRisk} student${stats.atRisk !== 1 ? 's' : ''} flagged • prioritize SMS for missing email`} tone="warning" />}
+          {focus.missingContact > 0 && <AlertRow title="Missing contact info" detail={`${focus.missingContact} student${focus.missingContact !== 1 ? 's' : ''} need phone verification • recommend SMS outreach`} tone="danger" />}
+          {focus.repliesWaiting > 0 && <AlertRow title="New replies waiting" detail={`${focus.repliesWaiting} response${focus.repliesWaiting !== 1 ? 's' : ''} received • review and update status`} tone="info" />}
+          {stats.atRisk === 0 && focus.missingContact === 0 && focus.repliesWaiting === 0 && (
+            <div style={{ padding: 20, textAlign: "center", background: "#f8fafc", borderRadius: 12, border: `1px dashed ${COLORS.borderStrong}` }}>
+              <div style={{ fontSize: 24, marginBottom: 8 }}>✅</div>
+              <div style={{ fontWeight: 800, fontSize: 14 }}>All caught up</div>
+              <Muted>No critical attendance alerts at this time.</Muted>
+            </div>
+          )}
         </div>
       </Card>
     </div>
@@ -810,52 +921,131 @@ function TemplatesView({ tone, setTone, subject, setSubject, body, setBody, prev
 
 function OutreachView({ students, template, programName, onOpenStudent }: { students: Student[]; template: { subject: string; body: string }; programName: string; onOpenStudent: (id: string) => void }) {
   const pending = students.filter(s => s.status === "Not Contacted" || s.status === "Pending");
+  const [dripActive, setDripActive] = useState(false);
+
   return (
-    <div style={{ display: "grid", gap: 16 }}>
-      <Card title="Outreach Tracker">
-        <Muted>Track outreach status with audit-friendly detail. Click any student to view message drafts.</Muted>
-        <Divider />
-        <div style={{ overflow: "auto", borderRadius: RADII.md, border: `1px solid ${COLORS.border}` }}>
-          <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0, minWidth: 860 }}>
-            <thead style={{ position: "sticky", top: 0, zIndex: 5 }}>
-              <tr style={{ background: "#FAFBFD" }}>
-                <th style={thStyle(true)}>Student</th>
-                <th style={thStyle(true)}>Language</th>
-                <th style={thStyle(true)}>Status</th>
-                <th style={thStyle(true)}>Draft Preview</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pending.map(s => (
-                <tr key={s.id} style={{ background: "#fff", cursor: "pointer" }} onClick={() => onOpenStudent(s.id)}>
-                  <td style={{ ...tdStyle(), fontWeight: 850 }}>{s.name}</td>
-                  <td style={tdStyle()}><LanguageTag lang={s.language} /></td>
-                  <td style={tdStyle()}><StatusBadge status={s.status} /></td>
-                  <td style={tdStyle()}><div style={{ color: COLORS.textMuted, fontSize: 12, fontStyle: "italic" }}>{formatTemplate(template.body, s, programName).slice(0, 92)}…</div></td>
+    <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1.3fr 0.7fr", gap: 16 }}>
+        <Card title="Outreach Queue">
+          <Muted>Track outreach status with audit-friendly detail. Click any student to view message drafts.</Muted>
+          <Divider />
+          <div style={{ overflow: "auto", borderRadius: RADII.md, border: `1px solid ${COLORS.border}`, maxHeight: 400 }}>
+            <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0, minWidth: 600 }}>
+              <thead style={{ position: "sticky", top: 0, zIndex: 5 }}>
+                <tr style={{ background: "#FAFBFD" }}>
+                  <th style={thStyle(true)}>Student</th>
+                  <th style={thStyle(true)}>Language</th>
+                  <th style={thStyle(true)}>Status</th>
+                  <th style={thStyle(true)}>Draft Preview</th>
                 </tr>
-              ))}
-              {pending.length === 0 ? (
-                <tr><td colSpan={4} style={{ padding: 18, textAlign: "center" }}><div style={{ fontWeight: 900 }}>You're up to date</div><Muted>No students currently need outreach.</Muted></td></tr>
-              ) : null}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+              </thead>
+              <tbody>
+                {pending.map(s => (
+                  <tr key={s.id} style={{ background: "#fff", cursor: "pointer" }} onClick={() => onOpenStudent(s.id)}>
+                    <td style={{ ...tdStyle(), fontWeight: 850 }}>{s.name}</td>
+                    <td style={tdStyle()}><LanguageTag lang={s.language} /></td>
+                    <td style={tdStyle()}><StatusBadge status={s.status} /></td>
+                    <td style={tdStyle()}><div style={{ color: COLORS.textMuted, fontSize: 12, fontStyle: "italic" }}>{formatTemplate(template.body, s, programName).slice(0, 50)}…</div></td>
+                  </tr>
+                ))}
+                {pending.length === 0 ? (
+                  <tr><td colSpan={4} style={{ padding: 18, textAlign: "center" }}><div style={{ fontWeight: 900 }}>You're up to date</div><Muted>No students currently need outreach.</Muted></td></tr>
+                ) : null}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+
+        <Card title="Automated Workflows (Drip Campaigns)" accent={COLORS.teal}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+              <div>
+                <div style={{ fontWeight: 800, fontSize: 13, color: COLORS.textPrimary }}>3-Day Non-Response Sequence</div>
+                <Muted>Automatically follow up if no response.</Muted>
+              </div>
+              <button 
+                onClick={() => setDripActive(!dripActive)}
+                style={{ background: dripActive ? SEMANTIC.success : COLORS.chipBg, border: "none", borderRadius: 20, padding: "4px 12px", color: dripActive ? "#fff" : COLORS.textMuted, fontWeight: 700, fontSize: 12, cursor: "pointer", transition: "all 0.2s ease" }}
+              >
+                {dripActive ? "Active" : "Paused"}
+              </button>
+            </div>
+            
+            <div style={{ padding: 12, background: "rgba(240,244,248,0.6)", borderRadius: RADII.md, border: `1px dashed ${COLORS.borderStrong}` }}>
+              <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 8 }}>
+                <span style={{ width: 24, height: 24, borderRadius: 99, background: COLORS.navy, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800 }}>1</span>
+                <span style={{ fontSize: 13, fontWeight: 600 }}>Send Initial Email</span>
+              </div>
+              <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 8 }}>
+                <div style={{ width: 2, height: 16, background: COLORS.border, marginLeft: 11 }} />
+              </div>
+              <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 8 }}>
+                <span style={{ width: 24, height: 24, borderRadius: 99, background: COLORS.teal, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800 }}>2</span>
+                <span style={{ fontSize: 13, fontWeight: 600 }}>Wait 3 Days</span>
+              </div>
+              <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 8 }}>
+                <div style={{ width: 2, height: 16, background: COLORS.border, marginLeft: 11 }} />
+              </div>
+              <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                <span style={{ width: 24, height: 24, borderRadius: 99, background: SEMANTIC.warning, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800 }}>3</span>
+                <span style={{ fontSize: 13, fontWeight: 600 }}>Send SMS Follow-up</span>
+              </div>
+            </div>
+
+            <HoverableButton style={btn({ variant: "outline" })} onClick={() => alert("Workflow Builder: Feature coming soon to production. This will allow you to design custom drip sequences.")}>+ Create New Workflow</HoverableButton>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }
 
 function AnalyticsView({ students }: { students: Student[] }) {
+  const [riskData, setRiskData] = useState<RiskAssessment[]>([]);
+  const [loadingRisk, setLoadingRisk] = useState(false);
+
+  useEffect(() => {
+    async function fetchRisk() {
+      setLoadingRisk(true);
+      try {
+        const data = await getRiskAssessment(students);
+        setRiskData(data);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoadingRisk(false);
+      }
+    }
+    fetchRisk();
+  }, [students]);
+
   const total = students.length;
   const contacted = students.filter(s => s.status === "Sent" || s.status === "Responded").length;
   const responded = students.filter(s => s.status === "Responded").length;
   const responseRate = total ? Math.round((responded / total) * 100) : 0;
   const unreachable = students.filter(s => s.status === "Unreachable" || (!s.email && !s.phone)).length;
+  
   const byLang = useMemo(() => {
     const map = new Map<Language, { total: number; contacted: number }>();
     students.forEach(s => { const cur = map.get(s.language) || { total: 0, contacted: 0 }; cur.total += 1; if (s.status === "Sent" || s.status === "Responded") cur.contacted += 1; map.set(s.language, cur); });
     return Array.from(map.entries()).sort((a, b) => b[1].total - a[1].total);
   }, [students]);
+
+  const chartData = useMemo(() => {
+    return byLang.map(([lang, stats]) => ({
+      name: lang,
+      Contacted: stats.contacted,
+      Pending: stats.total - stats.contacted,
+      Total: stats.total
+    }));
+  }, [byLang]);
+
+  const pieData = useMemo(() => {
+    const counts = { "Not Contacted": 0, "Pending": 0, "Sent": 0, "Responded": 0, "SMS Required": 0, "Unreachable": 0 };
+    students.forEach(s => counts[s.status as keyof typeof counts]++);
+    return Object.entries(counts).filter(([_, v]) => v > 0).map(([k, v]) => ({ name: k, value: v }));
+  }, [students]);
+
   return (
     <div style={{ display: "grid", gap: 16 }}>
       <Card title="Outreach Analytics" right={<Chip label="Last 30 days" />}>
@@ -866,29 +1056,90 @@ function AnalyticsView({ students }: { students: Student[] }) {
           <Metric title="Responded" value={responded} sub="Replies received" />
           <Metric title="Unreachable" value={unreachable} sub="Invalid/missing contact" />
         </div>
-        <Divider />
-        <div style={{ fontWeight: 900, fontSize: 13, marginBottom: 10 }}>Contact by Language</div>
-        <div style={{ display: "grid", gap: 10 }}>
-          {byLang.map(([lang, stats]) => {
-            const pct = stats.total ? Math.round((stats.contacted / stats.total) * 100) : 0;
-            return (
-              <div key={lang} style={{ display: "grid", gridTemplateColumns: "160px 1fr 70px", gap: 10, alignItems: "center" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}><LanguageTag lang={lang} /><Muted>{stats.contacted}/{stats.total}</Muted></div>
-                <div style={{ height: 10, borderRadius: 999, background: "rgba(148,163,184,0.22)", overflow: "hidden", border: `1px solid ${COLORS.border}` }}>
-                  <div style={{ width: `${pct}%`, height: "100%", background: COLORS.navy }} />
+      </Card>
+      
+      <div style={{ display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: 16 }}>
+        <Card title="Contact Progress by Language">
+          <div style={{ height: 320, marginTop: 16 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={COLORS.borderStrong} />
+                <XAxis type="number" />
+                <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 12, fill: COLORS.textSecondary }} />
+                <Tooltip cursor={{ fill: 'rgba(31,58,95,0.04)' }} contentStyle={{ borderRadius: RADII.md, border: `1px solid ${COLORS.border}`, boxShadow: SHADOWS.card }} />
+                <Bar dataKey="Contacted" stackId="a" fill={COLORS.teal} radius={[0, 0, 0, 0]} />
+                <Bar dataKey="Pending" stackId="a" fill={COLORS.navyLight} radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+
+        <Card title="Status Distribution">
+          <div style={{ height: 320, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+            <ResponsiveContainer width="100%" height={260}>
+              <PieChart>
+                <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={2} dataKey="value">
+                  {pieData.map((entry, index) => {
+                    const cfg = STATUS_CONFIG[entry.name as Status];
+                    return <Cell key={`cell-${index}`} fill={cfg?.dot || COLORS.navy} />;
+                  })}
+                </Pie>
+                <Tooltip contentStyle={{ borderRadius: RADII.md, border: `1px solid ${COLORS.border}`, boxShadow: SHADOWS.card }} />
+              </PieChart>
+            </ResponsiveContainer>
+            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 10, marginTop: 10 }}>
+              {pieData.map(d => (
+                <div key={d.name} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 700, color: COLORS.textSecondary }}>
+                  <span style={{ width: 8, height: 8, borderRadius: 99, background: STATUS_CONFIG[d.name as Status]?.dot || COLORS.navy }} />
+                  {d.name} ({d.value})
                 </div>
-                <div style={{ fontWeight: 900, fontSize: 12, textAlign: "right" }}>{pct}%</div>
-              </div>
-            );
-          })}
+              ))}
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      <Card title="AI Predictive Risk Assessment" right={loadingRisk ? <Chip label="Analyzing..." /> : <Chip label="Intelligence Active" color={COLORS.teal} />}>
+        <div style={{ display: "grid", gap: 12 }}>
+          <Muted>AI-driven identification of students at high risk of disengagement based on contact patterns and data completeness.</Muted>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12 }}>
+            {riskData.slice(0, 6).map(risk => {
+              const student = students.find(s => s.id === risk.studentId);
+              if (!student) return null;
+              const color = risk.level === "High" ? SEMANTIC.danger : risk.level === "Medium" ? SEMANTIC.warning : SEMANTIC.success;
+              return (
+                <div key={risk.studentId} style={{ padding: 16, borderRadius: RADII.md, border: `1px solid ${COLORS.border}`, background: "rgba(255,255,255,0.4)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: 8 }}>
+                    <div style={{ fontWeight: 800, fontSize: 14 }}>{student.name}</div>
+                    <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 99, background: color + "15", color: color, fontWeight: 900, textTransform: "uppercase" }}>{risk.level} Risk</span>
+                  </div>
+                  <div style={{ fontSize: 12, color: COLORS.textSecondary, marginBottom: 10 }}>{risk.reason}</div>
+                  <div style={{ padding: 8, borderRadius: 8, background: COLORS.bg, fontSize: 11, fontWeight: 700, borderLeft: `3px solid ${COLORS.teal}` }}>
+                    💡 Rec: {risk.recommendation}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </Card>
     </div>
   );
 }
 
-function AuditView({ auditLog }: { auditLog: AuditEntry[] }) {
+function AuditLogView({ auditLog }: { auditLog: AuditEntry[] }) {
   const [filter, setFilter] = useState("all");
+
+  async function simulateSMS() {
+    await fetch("/api/webhooks/sms", {
+      method: "POST",
+      body: new URLSearchParams({
+        From: "+19170000101", // Matching Lusine Bagryan
+        Body: "Hello! I am interested in the GED program. How do I start?"
+      })
+    });
+    window.location.reload();
+  }
 
   const filtered = useMemo(() => {
     if (filter === "all") return auditLog;
@@ -903,9 +1154,15 @@ function AuditView({ auditLog }: { auditLog: AuditEntry[] }) {
             <button key={t} onClick={() => setFilter(t)} style={{ padding: "6px 16px", borderRadius: RADII.sm, border: "none", background: filter === t ? COLORS.white : "transparent", color: filter === t ? COLORS.navy : COLORS.textMuted, fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: filter === t ? SHADOWS.card : "none", textTransform: "capitalize" }}>{t}</button>
           ))}
         </div>
-        <HoverableButton style={btn({ variant: "primary" })} onClick={() => alert("Generating Secure Compliance Bundle...")}>
-          📥 Export Audit-Ready Logs
-        </HoverableButton>
+        <div style={{ display: "flex", gap: 10 }}>
+          <HoverableButton style={btn({ variant: "outline" })} onClick={simulateSMS}>🛠 Simulate SMS Reply</HoverableButton>
+          <HoverableButton style={btn({ variant: "primary" })} onClick={() => {
+            const rows = auditLog.map(a => ({ Timestamp: new Date(a.timestamp).toLocaleString(), Actor: a.actor, Action: a.action, Type: a.type, Details: a.details }));
+            exportCSV(rows, `audit-log-${new Date().toISOString().slice(0,10)}.csv`);
+          }}>
+            📥 Export Audit-Ready Logs
+          </HoverableButton>
+        </div>
       </div>
 
       <Card>
@@ -943,8 +1200,8 @@ function AuditView({ auditLog }: { auditLog: AuditEntry[] }) {
   );
 }
 
-function MobileDemoView({ students, onStart, onOpenStudent }: { students: Student[]; onStart: () => void; onOpenStudent: (id: string) => void }) {
-  const todays = students.filter(s => s.status === "Not Contacted").slice(0, 5);
+function MobileDemoView({ students, onTabChange, onOpenStudent }: { students: Student[]; onTabChange: (t: any) => void; onOpenStudent: (id: string) => void }) {
+  const todays = students.filter(s => s.status === "Not Contacted" || s.status === "Pending").slice(0, 5);
   const recent = students.slice(0, 3);
   return (
     <div style={{ display: "grid", placeItems: "center" }}>
@@ -957,7 +1214,7 @@ function MobileDemoView({ students, onStart, onOpenStudent }: { students: Studen
           <Card title="Today's Task" style={{ boxShadow: "none" }}>
             <div style={{ display: "grid", gap: 10 }}>
               <div style={{ fontWeight: 900 }}>{todays.length} students to contact</div>
-              <HoverableButton style={btn({ variant: "primary" })} onClick={onStart}>Start Outreach</HoverableButton>
+              <HoverableButton style={btn({ variant: "primary" })} onClick={() => onTabChange("Roster")}>Start Outreach</HoverableButton>
             </div>
           </Card>
           <Card title="Recent Students" style={{ boxShadow: "none" }}>
@@ -972,10 +1229,10 @@ function MobileDemoView({ students, onStart, onOpenStudent }: { students: Studen
           </Card>
         </div>
         <div style={{ padding: 14, borderTop: `1px solid ${COLORS.border}`, display: "flex", justifyContent: "space-between" }}>
-          <button style={btn({ variant: "ghost" })}>Home</button>
-          <button style={btn({ variant: "ghost" })}>Roster</button>
-          <button style={btn({ variant: "ghost" })}>Send</button>
-          <button style={btn({ variant: "ghost" })}>Logs</button>
+          <button onClick={() => onTabChange("Dashboard")} style={btn({ variant: "ghost" })}>Home</button>
+          <button onClick={() => onTabChange("Roster")} style={btn({ variant: "ghost" })}>Roster</button>
+          <button onClick={() => onTabChange("Outreach")} style={btn({ variant: "ghost" })}>Send</button>
+          <button onClick={() => onTabChange("Audit")} style={btn({ variant: "ghost" })}>Logs</button>
         </div>
       </div>
     </div>
@@ -1033,11 +1290,15 @@ function StudentDetail({ student, programName, template, onClose, onSend, auditL
         </Card>
         <Card title="Actions" style={{ boxShadow: "none" }}>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-            <HoverableButton style={btn({ variant: "outline" })}>Call Now</HoverableButton>
-            <HoverableButton style={btn({ variant: "outline" })}>Send Text</HoverableButton>
-            <HoverableButton style={btn({ variant: "primary" })}>Send Email</HoverableButton>
-            <HoverableButton style={btn({ variant: "outline" })}>Print Letter</HoverableButton>
+            <HoverableButton style={btn({ variant: "outline" })} onClick={() => alert(`Simulating Phone Call to ${student.phone || 'student'}: Establishing secure connection...`)}>Call Now</HoverableButton>
+            <HoverableButton style={btn({ variant: "primary" })} onClick={() => { onSend(student.id); onClose(); }}>
+              {student.email ? "Send Email" : "Send SMS"}
+            </HoverableButton>
+            <HoverableButton style={btn({ variant: "outline" })} onClick={() => alert("Generating PDF: Preparing physical outreach letter for mailing...")}>Print Letter</HoverableButton>
           </div>
+        </Card>
+        <Card title="Activity Timeline" style={{ boxShadow: "none" }}>
+          <CommunicationTimeline studentId={student.id} auditLog={auditLog} />
         </Card>
       </div>
       <div style={{ display: "grid", gap: 12 }}>
@@ -1061,14 +1322,32 @@ function StudentDetail({ student, programName, template, onClose, onSend, auditL
   );
 }
 
-export default function EducatorOutreachPortal_Antigravity() {
+function useDarkModeTime() {
+  useEffect(() => {
+    const checkTime = () => {
+      const hour = new Date().getHours();
+      // Activate dark mode if it's 19:00 (7 PM) or later, or before 7 AM.
+      const isDark = hour >= 19 || hour < 7;
+      if (isDark) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+      }
+    };
+    checkTime();
+    const interval = setInterval(checkTime, 60000); // Check every minute
+    return () => clearInterval(interval);
+  }, []);
+}
+
+
+
+export default function EducatorOutreachPortal_Antigravity({ session }: { session: any }) {
+  useDarkModeTime();
   const [program, setProgram] = useState<"GED Reconnect" | "ESL Bridge" | "Workforce Launch">("GED Reconnect");
-  const [tab, setTab] = useState<"Dashboard" | "Roster" | "Templates" | "Outreach" | "Analytics" | "Mobile">("Dashboard");
-  const [students, setStudents] = useState<Student[]>(MOCK_STUDENTS);
-  const [auditLog, setAuditLog] = useState<AuditEntry[]>([
-    { id: "1", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), actor: "Mr. Caldwell", action: "System Initialization", details: "Portal database indexed and ready for outreach.", type: "system" },
-    { id: "2", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), actor: "System", action: "Compliance Scan", details: "All 12 students verified for primary language data.", type: "compliance" }
-  ]);
+  const [tab, setTab] = useState<"Dashboard" | "Roster" | "Templates" | "Outreach" | "Analytics" | "Audit" | "Mobile">("Dashboard");
+  const [students, setStudents] = useState<Student[]>([]);
+  const [auditLog, setAuditLog] = useState<AuditEntry[]>([]);
   const [query, setQuery] = useState("");
   const [languageFilter, setLanguageFilter] = useState<Language | "All">("All");
   const [statusFilter, setStatusFilter] = useState<Status | "All">("All");
@@ -1083,8 +1362,77 @@ export default function EducatorOutreachPortal_Antigravity() {
   const [bulkStep, setBulkStep] = useState<"confirm" | "sent">("confirm");
   const [bulkChannel, setBulkChannel] = useState<OutreachChannel>("Email");
   const [importOpen, setImportOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [apiKey, setApiKey] = useState("");
+  const [resendKey, setResendKey] = useState("");
+  const [twilioSid, setTwilioSid] = useState("");
+  const [twilioToken, setTwilioToken] = useState("");
+  const [twilioPhone, setTwilioPhone] = useState("");
+  const [fromEmail, setFromEmail] = useState("");
   const [legalModalOpen, setLegalModalOpen] = useState<{ open: boolean, type: "terms" | "privacy" | "dmca" | "refund" | null }>({ open: false, type: null });
   const fileRef = useRef<HTMLInputElement | null>(null);
+
+  // Initial Data Fetch
+  useEffect(() => {
+    async function init() {
+      const dbStudents = await getStudents();
+      if (dbStudents.length === 0) {
+        // Seed if empty
+        for (const s of MOCK_STUDENTS) {
+          await dbCreateStudent({ ...s, id: undefined });
+        }
+        setStudents(await getStudents() as any);
+      } else {
+        setStudents(dbStudents as any);
+      }
+
+      const dbAudit = await getAuditLogs();
+      setAuditLog(dbAudit as any);
+
+      const dbProgram = await getSetting("outreach_program");
+      if (dbProgram) setProgram(dbProgram as any);
+
+      const dbTone = await getSetting("outreach_tone");
+      if (dbTone) setTone(dbTone as any);
+
+      const dbSubject = await getSetting("outreach_subject");
+      if (dbSubject) setSubject(dbSubject);
+
+      const dbBody = await getSetting("outreach_body");
+      if (dbBody) setBody(dbBody);
+
+      const dbApiKey = await getSetting("ag_gemini_api_key");
+      if (dbApiKey) setApiKey(dbApiKey);
+
+      const dbResend = await getSetting("resend_api_key");
+      if (dbResend) setResendKey(dbResend);
+
+      const dbSid = await getSetting("twilio_sid");
+      if (dbSid) setTwilioSid(dbSid);
+
+      const dbToken = await getSetting("twilio_auth_token");
+      if (dbToken) setTwilioToken(dbToken);
+
+      const dbPhone = await getSetting("twilio_phone_number");
+      if (dbPhone) setTwilioPhone(dbPhone);
+
+      const dbFrom = await getSetting("email_from_address");
+      if (dbFrom) setFromEmail(dbFrom);
+    }
+    init();
+  }, []);
+
+  // Sync Settings to DB
+  useEffect(() => { saveSetting("outreach_program", program); }, [program]);
+  useEffect(() => { saveSetting("outreach_tone", tone); }, [tone]);
+  useEffect(() => { saveSetting("outreach_subject", subject); }, [subject]);
+  useEffect(() => { saveSetting("outreach_body", body); }, [body]);
+  useEffect(() => { saveSetting("ag_gemini_api_key", apiKey); }, [apiKey]);
+  useEffect(() => { saveSetting("resend_api_key", resendKey); }, [resendKey]);
+  useEffect(() => { saveSetting("twilio_sid", twilioSid); }, [twilioSid]);
+  useEffect(() => { saveSetting("twilio_auth_token", twilioToken); }, [twilioToken]);
+  useEffect(() => { saveSetting("twilio_phone_number", twilioPhone); }, [twilioPhone]);
+  useEffect(() => { saveSetting("email_from_address", fromEmail); }, [fromEmail]);
 
   const programName = useMemo(() => {
     if (program === "GED Reconnect") return "GED Program";
@@ -1100,31 +1448,84 @@ export default function EducatorOutreachPortal_Antigravity() {
   const languages = useMemo(() => { const set = new Set(students.map(s => s.language)); return ["All" as const, ...(Array.from(set).sort() as Language[])]; }, [students]);
   const statuses = useMemo(() => { const set = new Set(students.map(s => s.status)); return ["All" as const, ...(Array.from(set).sort() as Status[])]; }, [students]);
 
-  function logAudit(entry: Omit<AuditEntry, "id" | "timestamp" | "actor">) {
-    setAuditLog(prev => [{
+  async function logAudit(entry: Omit<AuditEntry, "id" | "timestamp" | "actor">) {
+    const newEntry = {
       ...entry,
-      id: `audit-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      timestamp: new Date().toISOString(),
-      actor: "Mr. Caldwell"
-    }, ...prev]);
+      actor: "Mr. Caldwell",
+      timestamp: new Date().toISOString()
+    };
+    const dbEntry = await dbCreateAuditEntry(newEntry as any);
+    setAuditLog(prev => [dbEntry as any, ...prev]);
   }
 
   function toggleSelected(id: string) { setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]); }
   function selectAllVisible() { const ids = filtered.map(s => s.id); const allSelected = ids.every(id => selected.includes(id)); setSelected(prev => { if (allSelected) return prev.filter(id => !ids.includes(id)); const next = new Set(prev); ids.forEach(id => next.add(id)); return Array.from(next); }); }
-  function updateStudent(id: string, patch: Partial<Student>) { setStudents(prev => prev.map(s => s.id === id ? { ...s, ...patch } : s)); }
-  function sendSingle(id: string) {
-    const s = students.find(x => x.id === id);
-    updateStudent(id, { status: "Sent" });
-    if (s) logAudit({ action: "Outreach Sent", studentId: s.id, studentName: s.name, details: `Individual outreach message sent via Email.`, type: "outreach" });
+  
+  async function updateStudent(id: string, patch: Partial<Student>) { 
+    setStudents(prev => prev.map(s => s.id === id ? { ...s, ...patch } : s));
+    await dbUpdateStudent(id, patch);
   }
+
+  async function sendSingle(id: string) {
+    const s = students.find(x => x.id === id);
+    if (!s) return;
+    
+    const chan: "Email" | "SMS" = (s.email ? "Email" : "SMS");
+    const res = await sendOutreach({ studentId: id, subject, body, channel: chan });
+    
+    await updateStudent(id, { status: "Sent" });
+    logAudit({ action: "Outreach Sent", studentId: s.id, studentName: s.name, details: `Individual outreach message sent via ${chan}. ${res.simulated ? "(Simulated)" : "(Real API)"}`, type: "outreach" });
+  }
+
   function openBulk() { setBulkStep("confirm"); setBulkOpen(true); }
-  function doBulkSend() {
+
+  async function doBulkSend() {
     const ids = selected.length ? selected : filtered.map(s => s.id);
-    setStudents(prev => prev.map(s => ids.includes(s.id) ? { ...s, status: bulkChannel === "SMS" ? "SMS Required" : "Sent" } : s));
-    logAudit({ action: "Bulk Outreach", details: `Sent ${ids.length} messages via ${bulkChannel}. Coverage increased.`, type: "outreach" });
+    const chan: "Email" | "SMS" = bulkChannel === "SMS" ? "SMS" : "Email";
+    const newStatus = "Sent";
+    
+    setStudents(prev => prev.map(s => ids.includes(s.id) ? { ...s, status: newStatus as any } : s));
+    
+    for (const id of ids) {
+      await sendOutreach({ studentId: id, subject, body, channel: chan });
+    }
+
+    logAudit({ action: "Bulk Outreach", details: `Sent ${ids.length} messages via ${chan}. Status updated for compliance.`, type: "outreach" });
     setBulkStep("sent");
   }
   function exportReport() { const rows = students.map(s => ({ Student: s.name, Language: s.language, Status: s.status, "Language Confidence": s.languageConfidence ?? "Auto-detected", Email: s.email ?? "", Phone: s.phone ?? "" })); exportCSV(rows, `educator-outreach-report-${program.replaceAll(" ", "_").toLowerCase()}.csv`); }
+  
+  function exportPDFReport() {
+    const doc = new jsPDF();
+    const title = `Educator Outreach Report: ${program}`;
+    const date = new Date().toLocaleString();
+    
+    doc.setFontSize(18);
+    doc.text(title, 14, 22);
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Generated on: ${date} | Program: ${program}`, 14, 30);
+    
+    const tableData = students.map(s => [
+      s.name,
+      s.language,
+      s.status,
+      s.email || "—",
+      s.phone || "—",
+      s.languageConfidence || "Auto"
+    ]);
+    
+    autoTable(doc, {
+      startY: 35,
+      head: [['Student Name', 'Language', 'Status', 'Email', 'Phone', 'Confidence']],
+      body: tableData,
+      theme: 'striped',
+      headStyles: { fillStyle: 'F0F4F8', textColor: [31, 58, 95], fontStyle: 'bold' },
+      styles: { fontSize: 9 }
+    });
+    
+    doc.save(`outreach-report-${program.toLowerCase().replace(/ /g, '-')}.pdf`);
+  }
   function handleImport(file: File) { const extra: Student[] = [{ id: String(Date.now()), name: "SAVCHENKO, ANDRII", language: "Ukrainian", status: "Not Contacted", languageConfidence: "Auto-detected", phone: "" }, { id: String(Date.now() + 1), name: "CHEN, MAXINE LU", language: "Chinese", status: "Not Contacted", languageConfidence: "Auto-detected", email: "" }, { id: String(Date.now() + 2), name: "MORA, RICHARD", language: "Spanish", status: "Not Contacted", languageConfidence: "Auto-detected", email: "richard@example.com" }]; setStudents(prev => [...extra, ...prev]); setImportOpen(false); }
   const [importTab, setImportTab] = useState<"paste" | "file">("paste");
   const [pasteText, setPasteText] = useState("");
@@ -1132,169 +1533,36 @@ export default function EducatorOutreachPortal_Antigravity() {
   const [parseError, setParseError] = useState("");
   const [parsing, setParsing] = useState(false);
 
-  function detectLanguageFromName(name: string): Language {
-    const n = name.toUpperCase();
-    if (/\b(GARCIA|MARTINEZ|RODRIGUEZ|LOPEZ|HERNANDEZ|GONZALEZ|PEREZ|SANCHEZ|RAMIREZ|FLORES|MORALES|TORRES|REYES|CRUZ|ORTIZ|GUTIERREZ|CHAVEZ|RAMOS|MENDOZA|MORA|VARGAS|CASTILLO|JIMENEZ|ROMERO|HERRERA|MEDINA|AGUILAR|VEGA|CABRERA|RIOS|FUENTES|GUERRERO|NUNEZ|SOTO|DELGADO|PENA|RUIZ|SILVA|CONTRERAS|MOLINA|SERRANO|ROJAS|DIAZ|ALVAREZ|ACOSTA|LARA|MENDEZ|SALINAS|ESPINOZA|MONTES|PADILLA)\b/.test(n)) return "Spanish";
-    if (/\b(CHEN|WANG|LI|ZHANG|LIU|YANG|HUANG|ZHAO|WU|ZHOU|XU|SUN|MA|ZHU|HU|GUO|LIN|HE|GAO|LIANG|ZHENG|XIE|TANG|DONG|CAO|DENG|FENG|HAN|JIANG|CHENG|XIAO|YU|YUAN|PAN|SONG|ZENG|PENG|FANG|LUO|DING|SHI|TIAN|LING|BAI|QIAN|YIN|ZOU|SHEN|WEI|MENG)\b/.test(n)) return "Chinese";
-    if (/\b(KOVALENKO|SHEVCHENKO|BONDARENKO|KRAVCHENKO|TKACHENKO|MELNYK|PETRENKO|SAVCHENKO|MOROZ|KOVALCHUK|MARCHENKO|LYSENKO|SYDORENKO|KARPENKO|KLYMENKO|PAVLENKO|OLIYNYK|RUDENKO|ZINCHENKO|HONCHARENKO|HRYTSENKO|DMYTRENKO|BOYKO|KOVALEV|SAVCHUK|NAZARENKO|FEDORENKO|SEMENKO|BILYK|ROMANENKO|HAVRYLIUK|YAKOVENKO|PONOMARENKO|TYMOSHENKO|KUCHMA|YUSHCHENKO|ZELENSKYY|ZELENSKY)\b/.test(n)) return "Ukrainian";
-    if (/\b(IVANOV|PETROV|SIDOROV|SMIRNOV|KUZNETSOV|POPOV|SOKOLOV|LEBEDEV|KOZLOV|NOVIKOV|MOROZOV|VOLKOV|SOLOVYOV|VASILIEV|ZAYTSEV|PAVLOV|SEMYONOV|GOLUBEV|VINOGRADOV|BOGDANOV|VOROBYOV|FYODOROV|MIKHAILOV|BELYAEV|TARASOV|BELOUSOV|DMITRIEV|ORLOV|KISELEV|MAKAROV|ANDREYEV|FROLOV|ALEXANDROV|MEDVEDEV|NIKOLAEV|STEPANOV|OWEN|HARRINGTON)\b/.test(n)) return "Russian";
-    if (/\b(SANTOS|REYES|DELA CRUZ|GARCIA|BAUTISTA|AQUINO|RAMOS|MENDOZA|TORRES|FLORES|VILLANUEVA|DIZON|CASTRO|AGUILAR|BERNARDO|DAVID|FERNANDEZ|GONZALES|HERNANDEZ|LIM|MANALO|NAVARRO|OCAMPO|PASCUAL|QUIZON|SALVADOR|TRINIDAD|UMALI|VALDEZ|AUSTRIA|BUENAVENTURA|CONCEPCION|ENRIQUEZ|FAJARDO|GUERRERO|IGNACIO|JIMENEZ|LACSON|MAGNO|NATIVIDAD)\b/.test(n)) return "Filipino";
-    if (/\b(NGUYEN|TRAN|LE|PHAM|HOANG|HUYNH|PHAN|VU|VO|DANG|BUI|DO|HO|NGO|DUONG|LY|TRUONG|DINH|TRINH|LUONG|NGUYEN|THAI|THACH|CHAU|LIEN|HUONG|THANH|MINH|ANH|LINH|TUYEN|QUANG|HUNG|CUONG|PHONG|KHANH|HIEN|TUYET|LOAN|NHUNG)\b/.test(n)) return "Vietnamese";
-    if (/\b(KIM|LEE|PARK|CHOI|JUNG|KANG|CHO|YOON|JANG|LIM|HAN|OH|SEO|SHIN|KWON|YANG|HONG|SONG|MOON|SON|AHN|RYU|BAEK|NAM|JEON|YOO|HA|HWANG|KWAK|HYUN|CHUN|YOON|BONG|JANG|SUNG|PAEK|CHUNG|BANG|PANG)\b/.test(n)) return "Korean";
-    if (/\b(YAMAMOTO|TANAKA|WATANABE|ITO|SUZUKI|SATO|KOBAYASHI|KATO|NAKAMURA|MATSUMOTO|INOUE|KIMURA|HAYASHI|SHIMIZU|YAMAZAKI|MORI|ABE|IKEDA|HASHIMOTO|YAMADA|OGAWA|ISHIKAWA|SAITO|FUJITA|OGATA|NISHIMURA|FUJIWARA|OKAMOTO|MATSUDA|NAKAJIMA|UEDA|NAITO|HARADA|FUKUDA|MIYAMOTO|TAKEUCHI|MAEDA|ENDO|AOKI|TAMURA)\b/.test(n)) return "Japanese";
-    if (/\b(AHMED|ALI|HASSAN|HUSSEIN|IBRAHIM|KHALIL|MAHMOUD|OMAR|RAHMAN|SALEH|SAYED|YOUSSEF|ABDEL|ABDOU|ADEL|AMIR|ANWAR|ASHRAF|BASSEM|EMAD|ESSAM|FATHY|GAMAL|HAMDY|HANY|KAMAL|KHALED|MAGDY|MEDHAT|MINA|MOSTAFA|NADER|NASSER|OSAMA|RAMADAN|RAMY|SAMIR|SHERIF|TAREK|WALID|WAEL|ZIAD)\b/.test(n)) return "Arabic";
-    if (/\b(SILVA|SOUZA|OLIVEIRA|SANTOS|RODRIGUES|FERREIRA|ALVES|PEREIRA|LIMA|GOMES|COSTA|RIBEIRO|MARTINS|CARVALHO|ALMEIDA|LOPES|SOUSA|FERNANDES|VIEIRA|BARBOSA|ROCHA|DIAS|MONTEIRO|CARDOSO|REIS|NASCIMENTO|ARAUJO|MOREIRA|NUNES|MARQUES|MACHADO|MENDES|TEIXEIRA|CORREIA|PINTO|MOURA|CAVALCANTI|RAMOS|FARIAS|AZEVEDO)\b/.test(n)) return "Portuguese";
-    if (/\b(PATEL|SHARMA|SINGH|KUMAR|GUPTA|VERMA|YADAV|MISHRA|JOSHI|PANDEY|TIWARI|CHAUHAN|AGARWAL|SRIVASTAVA|DUBEY|CHAUDHARY|MEHTA|NAIR|PILLAI|IYER|MENON|REDDY|RAO|KRISHNA|MURTHY|NAIDU|BHAT|HEGDE|GOWDA|SHASTRI|JAIN|SHAH|DESAI|TRIVEDI|BHATT|PARIKH|MODI|THAKKAR|KAPOOR|MALHOTRA|KHANNA|ARORA|BHATIA|CHOPRA|SETHI|AHUJA|ANAND|BAJAJ|BANSAL|BOSE)\b/.test(n)) return "Hindi";
-    if (/\b(DIALLO|BALDE|BARRY|SOW|CAMARA|TRAORE|SYLLA|KOUYATE|TOURE|KEITA|KOUROUMA|CONDE|BAH|BANGOURA|CISSE|DOUMBOUYA|FOFANA|GUILAVOGUI|KOIVOGUI|LAMAH|LOUA|MARA|MILLIMONO|NABÉ|ONIVOGUI|SAGNO|SOUMAH|YANSANE|ZOUMANIGUI|KOUROUMA|CAMARA|DIAKITE|DOUMBIA|KOUROUMA|KOULIBALY|KOUROUMA)\b/.test(n)) return "Fula";
-    if (/\b(DIALLO|COULIBALY|TRAORE|KEITA|DOUMBIA|KONE|SANGARE|DIARRA|DEMBELE|TOURE|SIDIBE|CAMARA|CISSE|BAMBA|DIABATE|DIAKITE|DOUMBIA|FOFANA|KONATE|KOUYATE|MAIGA|MARIKO|NDIAYE|NIARE|OUATTARA|SACKO|SANOGO|SISSOKO|SYLLA|TOUNKARA|TRAORE|YALCOUYE|COULIBALY|DEMBELE|DIALLO|KEITA|KONE|SANGARE|SIDIBE|TOURE)\b/.test(n)) return "Malinké";
-    return "Spanish"; // default fallback
-  }
 
-  function parseRawPaste(raw: string): Student[] {
-    const lines = raw.trim().split(/\r?\n/).filter(l => l.trim());
-    if (lines.length < 2) throw new Error("Need at least a header row and one data row.");
 
-    // Detect delimiter: tab (Excel/Sheets copy) or comma (CSV)
-    const firstLine = lines[0];
-    const delimiter = firstLine.includes("\t") ? "\t" : ",";
-    const splitRow = (row: string) => delimiter === "\t" ? row.split("\t") : row.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(c => c.replace(/^"|"$/g, "").trim());
 
-    const headers = splitRow(firstLine).map(h => h.trim().toLowerCase());
 
-    // Column mapping heuristics
-    const colIdx = (patterns: string[]) => {
-      for (const p of patterns) {
-        const idx = headers.findIndex(h => h.includes(p));
-        if (idx !== -1) return idx;
-      }
-      return -1;
-    };
-
-    const nameCol = colIdx(["name", "student", "full name", "fullname", "last", "first"]);
-    const firstCol = colIdx(["first", "given", "fname"]);
-    const lastCol = colIdx(["last", "surname", "family", "lname"]);
-    const emailCol = colIdx(["email", "e-mail", "mail"]);
-    const phoneCol = colIdx(["phone", "cell", "mobile", "tel", "contact"]);
-    const langCol = colIdx(["language", "lang", "primary language", "home language", "native"]);
-    const statusCol = colIdx(["status", "outreach", "contacted"]);
-    const addressCol = colIdx(["address", "addr", "street", "location"]);
-
-    const dataLines = lines.slice(1);
-    const students: Student[] = [];
-
-    for (let i = 0; i < dataLines.length; i++) {
-      const cols = splitRow(dataLines[i]);
-      if (cols.every(c => !c.trim())) continue; // skip empty rows
-
-      // Build name
-      let name = "";
-      if (nameCol !== -1) {
-        name = cols[nameCol]?.trim() || "";
-      } else if (firstCol !== -1 || lastCol !== -1) {
-        const first = firstCol !== -1 ? (cols[firstCol]?.trim() || "") : "";
-        const last = lastCol !== -1 ? (cols[lastCol]?.trim() || "") : "";
-        name = last && first ? `${last.toUpperCase()}, ${first}` : (last || first);
-      } else {
-        // No name column found — use first non-empty column
-        name = cols[0]?.trim() || `Student ${i + 1}`;
-      }
-      if (!name) continue;
-
-      // Detect language
-      let language: Language = "Spanish";
-      if (langCol !== -1 && cols[langCol]?.trim()) {
-        const raw = cols[langCol].trim();
-        // Try to match to known language names
-        const LANG_MAP: Record<string, Language> = {
-          spanish: "Spanish", español: "Spanish", espanol: "Spanish",
-          ukrainian: "Ukrainian", ukraine: "Ukrainian",
-          chinese: "Chinese", mandarin: "Chinese", cantonese: "Chinese",
-          russian: "Russian",
-          filipino: "Filipino", tagalog: "Filipino",
-          french: "French", français: "French",
-          arabic: "Arabic", arab: "Arabic",
-          portuguese: "Portuguese", brasil: "Portuguese", brazil: "Portuguese",
-          hindi: "Hindi", indian: "Hindi",
-          bengali: "Bengali",
-          urdu: "Urdu",
-          vietnamese: "Vietnamese", viet: "Vietnamese",
-          korean: "Korean",
-          japanese: "Japanese",
-          turkish: "Turkish",
-          polish: "Polish",
-          romanian: "Romanian",
-          dutch: "Dutch",
-          italian: "Italian",
-          german: "German", deutsch: "German",
-          "haitian creole": "Haitian Creole", haitian: "Haitian Creole", creole: "Haitian Creole",
-          somali: "Somali",
-          amharic: "Amharic", ethiopian: "Amharic",
-          swahili: "Swahili",
-          hmong: "Hmong",
-          khmer: "Khmer", cambodian: "Khmer",
-          lao: "Lao", laotian: "Lao",
-          burmese: "Burmese", myanmar: "Burmese",
-          nepali: "Nepali",
-          pashto: "Pashto", afghan: "Pashto",
-          fula: "Fula", fulani: "Fula", peul: "Fula",
-          malinke: "Malinké", mandinka: "Malinké",
-          mayan: "Mayan", maya: "Mayan",
-          persian: "Persian", farsi: "Persian", iranian: "Persian",
-          english: "English",
-        };
-        const key = raw.toLowerCase();
-        language = LANG_MAP[key] || detectLanguageFromName(name);
-      } else {
-        language = detectLanguageFromName(name);
-      }
-
-      // Status mapping
-      let status: Status = "Not Contacted";
-      if (statusCol !== -1 && cols[statusCol]?.trim()) {
-        const s = cols[statusCol].trim().toLowerCase();
-        if (s.includes("sent") || s.includes("contacted")) status = "Sent";
-        else if (s.includes("respond") || s.includes("replied")) status = "Responded";
-        else if (s.includes("pending")) status = "Pending";
-        else if (s.includes("sms") || s.includes("text")) status = "SMS Required";
-        else if (s.includes("unreachable") || s.includes("invalid")) status = "Unreachable";
-      }
-
-      students.push({
-        id: `import-${Date.now()}-${i}`,
-        name: name.trim(),
-        language,
-        status,
-        email: emailCol !== -1 ? (cols[emailCol]?.trim() || undefined) : undefined,
-        phone: phoneCol !== -1 ? (cols[phoneCol]?.trim() || undefined) : undefined,
-        address: addressCol !== -1 ? (cols[addressCol]?.trim() || undefined) : undefined,
-        languageConfidence: langCol !== -1 ? "Verified" : "Auto-detected",
-      });
-    }
-
-    if (students.length === 0) throw new Error("No valid student rows found. Check your data.");
-    return students;
-  }
-
-  function handleParsePaste() {
+  async function handleParsePaste() {
     setParsedPreview(null);
     setParseError("");
     if (!pasteText.trim()) { setParseError("Please paste some data first."); return; }
     setParsing(true);
-    setTimeout(() => {
-      try {
-        const result = parseRawPaste(pasteText);
-        setParsedPreview(result);
-      } catch (e: any) {
-        setParseError(e.message || "Could not parse the data.");
-      } finally {
-        setParsing(false);
-      }
-    }, 600); // simulate AI processing delay
+    try {
+      // Use AI for parsing on the server
+      const result = await parseViaAI(pasteText);
+      setParsedPreview(result as any);
+    } catch (e: any) {
+      setParseError(e.message || "Could not parse the data.");
+    } finally {
+      setParsing(false);
+    }
   }
 
-  function confirmPasteImport() {
+  async function confirmPasteImport() {
     if (!parsedPreview) return;
-    setStudents(prev => [...parsedPreview, ...prev]);
+    
+    const imported: Student[] = [];
+    for (const s of parsedPreview) {
+      const created = await dbCreateStudent({ ...s, id: undefined });
+      imported.push(created as any);
+    }
+    
+    setStudents(prev => [...imported, ...prev]);
     logAudit({ action: "Bulk Import", details: `Imported ${parsedPreview.length} students from manual paste with AI parsing.`, type: "import" });
     setPasteText("");
     setParsedPreview(null);
@@ -1307,8 +1575,22 @@ export default function EducatorOutreachPortal_Antigravity() {
   }
 
 
+  const isAdmin = session?.user?.role === "ADMIN";
+  const tabs = useMemo(() => {
+    const base = [
+      { value: "Dashboard", label: "Dashboard" },
+      { value: "Roster", label: "Roster" },
+      { value: "Templates", label: "Templates" },
+      { value: "Outreach", label: "Outreach" },
+      { value: "Analytics", label: "Analytics" },
+    ];
+    if (isAdmin) base.push({ value: "Audit", label: "Audit" });
+    base.push({ value: "Mobile", label: "Mobile" });
+    return base;
+  }, [isAdmin]);
+
   return (
-    <AppShell title="The Educator Outreach Portal" subtitle={`Program: ${program} • Welcome, Mr. Caldwell`} onExportReport={exportReport} onOpenLegal={type => setLegalModalOpen({ open: true, type })}>
+    <AppShell title="The Educator Outreach Portal" subtitle={`Program: ${program} • Session Active`} onExportReport={exportReport} onOpenLegal={type => setLegalModalOpen({ open: true, type })} onOpenSettings={() => setSettingsOpen(true)} userName={session?.user?.name} role={session?.user?.role}>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
         <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
           <select value={program} onChange={e => setProgram(e.target.value as any)} style={{ padding: "10px 12px", borderRadius: 12, border: `1px solid ${COLORS.borderStrong}`, background: "rgba(255,255,255,0.75)", fontWeight: 800, color: COLORS.textPrimary }}>
@@ -1316,22 +1598,62 @@ export default function EducatorOutreachPortal_Antigravity() {
             <option>ESL Bridge</option>
             <option>Workforce Launch</option>
           </select>
-          <Segmented value={tab} onChange={v => setTab(v as any)} options={[{ value: "Dashboard", label: "Dashboard" }, { value: "Roster", label: "Roster" }, { value: "Templates", label: "Templates" }, { value: "Outreach", label: "Outreach" }, { value: "Analytics", label: "Analytics" }, { value: "Mobile", label: "Mobile" }]} />
+          <Segmented value={tab} onChange={v => setTab(v as any)} options={tabs} />
         </div>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <HoverableButton style={btn({ variant: "outline" })} onClick={() => setImportOpen(true)}>Smart Import</HoverableButton>
+          <HoverableButton style={btn({ variant: "outline" })} onClick={exportPDFReport}>📄 Export PDF Log</HoverableButton>
+          {isAdmin && <HoverableButton style={btn({ variant: "outline" })} onClick={() => setImportOpen(true)}>Smart Import</HoverableButton>}
           <HoverableButton style={btn({ variant: "primary" })} onClick={openBulk}>Send Bulk Outreach</HoverableButton>
         </div>
       </div>
 
-      {tab === "Dashboard" ? <DashboardView focus={focus} onPickFocus={key => { if (key === "atRisk") setStatusFilter("Not Contacted"); if (key === "missingContact") setStatusFilter("All"); if (key === "replies") setStatusFilter("Responded"); setTab("Roster"); }} stats={{ total: students.length, atRisk: students.filter(s => s.status === "Not Contacted" || s.status === "Pending").length, smsRequired: students.filter(s => s.status === "SMS Required").length, unreachable: students.filter(s => s.status === "Unreachable" || (!s.email && !s.phone)).length }} /> : null}
+      {tab === "Dashboard" ? (
+        <DashboardView 
+          focus={focus} 
+          onPickFocus={key => { 
+            if (key === "atRisk") setStatusFilter("Not Contacted"); 
+            if (key === "missingContact") setStatusFilter("All"); 
+            if (key === "replies") setStatusFilter("Responded"); 
+            setTab("Roster"); 
+          }} 
+          stats={{ 
+            total: students.length, 
+            atRisk: students.filter(s => s.status === "Not Contacted" || s.status === "Pending").length, 
+            smsRequired: students.filter(s => s.status === "SMS Required").length, 
+            unreachable: students.filter(s => s.status === "Unreachable" || (!s.email && !s.phone)).length 
+          }}
+          onSendEmail={() => { setTab("Outreach"); setBulkChannel("Email"); setBulkOpen(true); }}
+          onReviewDrafts={() => setTab("Templates")}
+          onDownloadLog={exportReport}
+        />
+      ) : null}
       {tab === "Roster" ? <RosterView students={filtered} allStudents={students} query={query} setQuery={setQuery} languageFilter={languageFilter} setLanguageFilter={setLanguageFilter} statusFilter={statusFilter} setStatusFilter={setStatusFilter} languages={languages} statuses={statuses} selected={selected} toggleSelected={toggleSelected} selectAllVisible={selectAllVisible} hoveredId={hoveredId} setHoveredId={setHoveredId} onRowClick={id => setActiveStudentId(id)} onSend={id => sendSingle(id)} /> : null}
       {tab === "Templates" ? <TemplatesView tone={tone} setTone={setTone} subject={subject} setSubject={setSubject} body={body} setBody={setBody} previewLangs={previewLangs} setPreviewLangs={setPreviewLangs} /> : null}
       {tab === "Outreach" ? <OutreachView students={students} template={{ subject, body }} programName={programName} onOpenStudent={id => setActiveStudentId(id)} /> : null}
       {tab === "Analytics" ? <AnalyticsView students={students} /> : null}
-      {tab === "Mobile" ? <MobileDemoView students={students} onStart={() => setTab("Roster")} onOpenStudent={id => setActiveStudentId(id)} /> : null}
+      {tab === "Audit" ? <AuditLogView auditLog={auditLog} /> : null}
+      {tab === "Mobile" ? <MobileDemoView students={students} onTabChange={setTab} onOpenStudent={id => setActiveStudentId(id)} /> : null}
 
-      <Modal open={!!activeStudent} title={activeStudent ? `Student Profile — ${activeStudent.name}` : "Student Profile"} onClose={() => setActiveStudentId(null)} footer={activeStudent ? (<><HoverableButton style={btn({ variant: "outline" })} onClick={() => updateStudent(activeStudent.id, { status: "Sent" })}>Mark as Contacted</HoverableButton><HoverableButton style={btn({ variant: "teal" })} onClick={() => updateStudent(activeStudent.id, { status: "Responded" })}>Mark Responded</HoverableButton><HoverableButton style={btn({ variant: "danger" })} onClick={() => updateStudent(activeStudent.id, { status: "Unreachable" })}>Mark Unreachable</HoverableButton></>) : null}>
+      <Modal open={!!activeStudent} title={activeStudent ? `Student Profile — ${activeStudent.name}` : "Student Profile"} onClose={() => setActiveStudentId(null)} footer={activeStudent ? (
+        <div style={{ display: "flex", width: "100%", justifyContent: "space-between", alignItems: "center" }}>
+          <select 
+            value={activeStudent.status} 
+            onChange={e => updateStudent(activeStudent.id, { status: e.target.value as Status })}
+            style={{ padding: "8px 12px", borderRadius: RADII.sm, border: `1px solid ${COLORS.borderStrong}`, background: COLORS.bg, fontWeight: 700, fontSize: 13, color: COLORS.textPrimary }}
+          >
+            <option value="Not Contacted">Not Contacted</option>
+            <option value="Pending">Pending</option>
+            <option value="Sent">Sent</option>
+            <option value="Responded">Responded</option>
+            <option value="SMS Required">SMS Required</option>
+            <option value="Unreachable">Unreachable</option>
+          </select>
+          <div style={{ display: "flex", gap: 10 }}>
+            <HoverableButton style={btn({ variant: "outline" })} onClick={() => updateStudent(activeStudent.id, { status: "Sent" })}>Mark as Contacted</HoverableButton>
+            <HoverableButton style={btn({ variant: "teal" })} onClick={() => updateStudent(activeStudent.id, { status: "Responded" })}>Mark Responded</HoverableButton>
+          </div>
+        </div>
+      ) : null}>
         {activeStudent ? <StudentDetail student={activeStudent} programName={programName} template={{ subject, body }} onClose={() => setActiveStudentId(null)} onSend={id => sendSingle(id)} auditLog={auditLog} /> : null}
       </Modal>
 
@@ -1492,6 +1814,57 @@ export default function EducatorOutreachPortal_Antigravity() {
       </Modal>
 
       <LegalModal open={legalModalOpen.open} type={legalModalOpen.type} onClose={() => setLegalModalOpen({ ...legalModalOpen, open: false })} />
+
+      <Modal open={settingsOpen} title="System & AI Settings" onClose={() => setSettingsOpen(false)} footer={<HoverableButton style={btn({ variant: "primary" })} onClick={() => setSettingsOpen(false)}>Save & Close</HoverableButton>}>
+        <div style={{ display: "grid", gap: 20, maxHeight: 480, overflowY: "auto", paddingRight: 8 }}>
+          <section>
+            <div style={{ fontSize: 11, fontWeight: 900, color: COLORS.teal, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>Artificial Intelligence</div>
+            <div style={{ display: "grid", gap: 12 }}>
+              <div>
+                <label style={labelStyle()}>Gemini API Key</label>
+                <input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="AIzaSy..." style={inputStyle()} />
+                <Muted style={{ display: "block", marginTop: 4 }}>Powers context-aware translations and Smart Import.</Muted>
+              </div>
+            </div>
+          </section>
+
+          <Divider />
+
+          <section>
+            <div style={{ fontSize: 11, fontWeight: 900, color: COLORS.teal, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>Email (Resend)</div>
+            <div style={{ display: "grid", gap: 12 }}>
+              <div>
+                <label style={labelStyle()}>Resend API Key</label>
+                <input type="password" value={resendKey} onChange={e => setResendKey(e.target.value)} placeholder="re_..." style={inputStyle()} />
+              </div>
+              <div>
+                <label style={labelStyle()}>From Email Address</label>
+                <input type="email" value={fromEmail} onChange={e => setFromEmail(e.target.value)} placeholder="outreach@yourdomain.edu" style={inputStyle()} />
+              </div>
+            </div>
+          </section>
+
+          <Divider />
+
+          <section>
+            <div style={{ fontSize: 11, fontWeight: 900, color: COLORS.teal, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>SMS (Twilio)</div>
+            <div style={{ display: "grid", gap: 12 }}>
+              <div>
+                <label style={labelStyle()}>Account SID</label>
+                <input type="text" value={twilioSid} onChange={e => setTwilioSid(e.target.value)} placeholder="AC..." style={inputStyle()} />
+              </div>
+              <div>
+                <label style={labelStyle()}>Auth Token</label>
+                <input type="password" value={twilioToken} onChange={e => setTwilioToken(e.target.value)} placeholder="token..." style={inputStyle()} />
+              </div>
+              <div>
+                <label style={labelStyle()}>Twilio Phone Number</label>
+                <input type="text" value={twilioPhone} onChange={e => setTwilioPhone(e.target.value)} placeholder="+1..." style={inputStyle()} />
+              </div>
+            </div>
+          </section>
+        </div>
+      </Modal>
     </AppShell>
   );
 }
