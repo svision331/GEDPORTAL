@@ -94,10 +94,16 @@ function StudentDetail({ student, programName, template, onClose, onSend, auditL
             <HoverableButton style={btn({ variant: "primary" })} onClick={() => { onSend(student.id); onClose(); }}>
               {student.email ? "Send Email" : "Send SMS"}
             </HoverableButton>
-            <HoverableButton style={btn({ variant: "outline" })} onClick={() => {
-              const date = prompt("Enter outreach date (YYYY-MM-DD):", new Date().toISOString().split('T')[0]);
-              if (date) onUpdate(student.id, { scheduledOutreach: date });
-            }}>📅 Schedule</HoverableButton>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <label style={{ fontSize: 11, fontWeight: 700, color: COLORS.textMuted, whiteSpace: "nowrap" }}>📅 Schedule:</label>
+              <input
+                type="date"
+                value={student.scheduledOutreach ? new Date(student.scheduledOutreach).toISOString().split('T')[0] : ""}
+                min={new Date().toISOString().split('T')[0]}
+                onChange={e => onUpdate(student.id, { scheduledOutreach: e.target.value || null as any })}
+                style={{ ...inputStyle(), padding: "6px 10px", fontSize: 12, width: 140 }}
+              />
+            </div>
             <HoverableButton style={btn({ variant: "outline" })} onClick={() => alert("Generating PDF: Preparing physical outreach letter for mailing...")}>Print Letter</HoverableButton>
           </div>
         </Card>

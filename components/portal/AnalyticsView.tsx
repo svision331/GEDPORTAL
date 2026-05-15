@@ -52,19 +52,18 @@ function AnalyticsView({ students, onFilterStatus, privacyMode, maskPII }: { stu
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
-      <Card title="Outreach Analytics" right={<Chip label="Last 30 days" />}>
+      <Card title="Outreach Analytics">
         <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
-          <Metric title="Total Students" value={total} sub="In scope" trend="+2%" />
-          <Metric title="Contacted" value={contacted} sub="Sent + Responded" trend="+12%" />
-          <Metric 
-            title="Response Rate" 
-            value={responseRate} 
-            sub={responseRate < 10 ? "Requires attention" : "Percent responded"} 
+          <Metric title="Total Students" value={total} sub="Roster size" tone="neutral" />
+          <Metric title="Contacted" value={contacted} sub="Sent + Responded" tone={contacted > 0 ? "success" : "neutral"} />
+          <Metric
+            title="Response Rate"
+            value={responseRate}
+            sub={responseRate < 10 ? "Requires attention" : "Percent responded"}
             tone={responseRate < 10 ? "danger" : responseRate < 30 ? "warning" : "success"}
-            trend={responseRate > 20 ? "+4%" : "-1%"}
           />
-          <Metric title="Responded" value={responded} sub="Replies received" trend="+8%" />
-          <Metric title="Unreachable" value={unreachable} sub="Invalid/missing contact" trend="-3%" />
+          <Metric title="Responded" value={responded} sub="Replies received" tone={responded > 0 ? "success" : "neutral"} />
+          <Metric title="Unreachable" value={unreachable} sub="Invalid/missing contact" tone={unreachable > 0 ? "warning" : "success"} />
         </div>
       </Card>
       

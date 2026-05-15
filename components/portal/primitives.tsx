@@ -455,14 +455,14 @@ function LegalModal({ open, type, onClose }: { open: boolean; type: "terms" | "p
 
 function Footer({ onOpenLegal }: { onOpenLegal: (type: "terms" | "privacy" | "dmca" | "refund") => void }) {
   return (
-    <div style={{ padding: "32px 20px", marginTop: 40, borderTop: `1px solid ${COLORS.border}`, display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
-      <div style={{ display: "flex", gap: 24, fontSize: 12, fontWeight: 700 }}>
-        <button onClick={() => onOpenLegal("terms")} style={{ background: "none", border: "none", color: COLORS.textMuted, cursor: "pointer", padding: 0, fontFamily: "inherit" }}>Terms of Service</button>
-        <button onClick={() => onOpenLegal("privacy")} style={{ background: "none", border: "none", color: COLORS.textMuted, cursor: "pointer", padding: 0, fontFamily: "inherit" }}>Privacy Policy</button>
-        <button onClick={() => onOpenLegal("dmca")} style={{ background: "none", border: "none", color: COLORS.textMuted, cursor: "pointer", padding: 0, fontFamily: "inherit" }}>DMCA Policy</button>
-        <button onClick={() => onOpenLegal("refund")} style={{ background: "none", border: "none", color: COLORS.textMuted, cursor: "pointer", padding: 0, fontFamily: "inherit" }}>Refund Policy</button>
+    <div style={{ padding: "20px", marginTop: 24, borderTop: `1px solid ${COLORS.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+      <Muted style={{ fontSize: 11 }}>© Soulvision LLC 2026. All rights reserved.</Muted>
+      <div style={{ display: "flex", gap: 20, fontSize: 11, fontWeight: 600 }}>
+        <button onClick={() => onOpenLegal("terms")} style={{ background: "none", border: "none", color: COLORS.textMuted, cursor: "pointer", padding: 0, fontFamily: "inherit", fontSize: "inherit" }}>Terms</button>
+        <button onClick={() => onOpenLegal("privacy")} style={{ background: "none", border: "none", color: COLORS.textMuted, cursor: "pointer", padding: 0, fontFamily: "inherit", fontSize: "inherit" }}>Privacy</button>
+        <button onClick={() => onOpenLegal("dmca")} style={{ background: "none", border: "none", color: COLORS.textMuted, cursor: "pointer", padding: 0, fontFamily: "inherit", fontSize: "inherit" }}>DMCA</button>
+        <button onClick={() => onOpenLegal("refund")} style={{ background: "none", border: "none", color: COLORS.textMuted, cursor: "pointer", padding: 0, fontFamily: "inherit", fontSize: "inherit" }}>Refund</button>
       </div>
-      <Muted>Copyright © Antigravity 2026. All rights reserved.</Muted>
     </div>
   );
 }

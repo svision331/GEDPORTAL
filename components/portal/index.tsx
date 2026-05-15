@@ -301,6 +301,7 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
       privacyMode={privacyMode}
       setPrivacyMode={setPrivacyMode}
       showToast={showToast}
+      showFooter={tab === "Dashboard"}
     >
       {/* Demo Overlay */}
       {demoStep !== null && (
@@ -419,7 +420,7 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
           }}
         />
       ) : null}
-      {tab === "Roster" ? <RosterView students={filtered} allStudents={students} query={query} setQuery={setQuery} languageFilter={languageFilter} setLanguageFilter={setLanguageFilter} statusFilter={statusFilter} setStatusFilter={setStatusFilter} languages={languages} statuses={statuses} selected={selected} toggleSelected={toggleSelected} selectAllVisible={selectAllVisible} hoveredId={hoveredId} setHoveredId={setHoveredId} onRowClick={id => setActiveStudentId(id)} onSend={id => sendSingle(id)} privacyMode={privacyMode} maskPII={maskPII} /> : null}
+      {tab === "Roster" ? <RosterView students={filtered} allStudents={students} query={query} setQuery={setQuery} languageFilter={languageFilter} setLanguageFilter={setLanguageFilter} statusFilter={statusFilter} setStatusFilter={setStatusFilter} languages={languages} statuses={statuses} selected={selected} toggleSelected={toggleSelected} selectAllVisible={selectAllVisible} hoveredId={hoveredId} setHoveredId={setHoveredId} onRowClick={id => setActiveStudentId(id)} onSend={id => sendSingle(id)} privacyMode={privacyMode} maskPII={maskPII} onViewCalendar={() => setTab("Calendar")} /> : null}
       {tab === "Outreach" ? <OutreachView
           students={students}
           template={{ subject, body }}

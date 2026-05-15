@@ -3,8 +3,8 @@ import React from "react";
 import { COLORS, SEMANTIC, SHADOWS, RADII, STATUS_CONFIG, Student, AuditEntry, Language, Status, TemplateTone, getStudentName } from "./types";
 
 
-function RosterView(props: { students: Student[]; allStudents: Student[]; query: string; setQuery: (v: string) => void; languageFilter: Language | "All"; setLanguageFilter: (v: any) => void; statusFilter: Status | "All"; setStatusFilter: (v: any) => void; languages: Array<Language | "All">; statuses: Array<Status | "All">; selected: string[]; toggleSelected: (id: string) => void; selectAllVisible: () => void; hoveredId: string | null; setHoveredId: (id: string | null) => void; onRowClick: (id: string) => void; onSend: (id: string) => void; privacyMode: boolean; maskPII: any }) {
-  const { students, allStudents, query, setQuery, languageFilter, setLanguageFilter, statusFilter, setStatusFilter, languages, statuses, selected, toggleSelected, selectAllVisible, hoveredId, setHoveredId, onRowClick, onSend, privacyMode, maskPII } = props;
+function RosterView(props: { students: Student[]; allStudents: Student[]; query: string; setQuery: (v: string) => void; languageFilter: Language | "All"; setLanguageFilter: (v: any) => void; statusFilter: Status | "All"; setStatusFilter: (v: any) => void; languages: Array<Language | "All">; statuses: Array<Status | "All">; selected: string[]; toggleSelected: (id: string) => void; selectAllVisible: () => void; hoveredId: string | null; setHoveredId: (id: string | null) => void; onRowClick: (id: string) => void; onSend: (id: string) => void; privacyMode: boolean; maskPII: any; onViewCalendar: () => void }) {
+  const { students, allStudents, query, setQuery, languageFilter, setLanguageFilter, statusFilter, setStatusFilter, languages, statuses, selected, toggleSelected, selectAllVisible, hoveredId, setHoveredId, onRowClick, onSend, privacyMode, maskPII, onViewCalendar } = props;
   
   const [sortField, setSortField] = useState<"name" | "language" | "status" | "contacted">("name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
@@ -46,9 +46,23 @@ function RosterView(props: { students: Student[]; allStudents: Student[]; query:
     return <span style={{ marginLeft: 4, color: COLORS.teal }}>{sortDir === "asc" ? "↑" : "↓"}</span>;
   };
 
+  const scheduledCount = allStudents.filter(s => s.scheduledOutreach).length;
+
   return (
     <div style={{ display: "grid", gap: 16 }}>
-      <Card title="Student Roster" right={<div style={{ display: "flex", gap: 10, alignItems: "center" }}><Muted>Showing {students.length} of {allStudents.length} students</Muted></div>}>
+      <Card title="Student Roster" right={
+        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          {scheduledCount > 0 && (
+            <button
+              onClick={onViewCalendar}
+              style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(8,145,178,0.08)", border: `1px solid rgba(8,145,178,0.2)`, color: "var(--teal)", borderRadius: 20, padding: "4px 12px", fontSize: 11, fontWeight: 800, cursor: "pointer" }}
+            >
+              📅 {scheduledCount} scheduled — View Calendar
+            </button>
+          )}
+          <Muted>Showing {students.length} of {allStudents.length} students</Muted>
+        </div>
+      }>
         <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto auto", gap: 10 }}>
           <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search names..." style={inputStyle()} />
           <select value={languageFilter} onChange={e => setLanguageFilter(e.target.value)} style={inputStyle()}>

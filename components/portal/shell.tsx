@@ -94,12 +94,12 @@ function TopBar({ title, subtitle, onExportReport, onOpenSettings, onStartDemo, 
   );
 }
 
-function AppShell({ children, title, subtitle, onExportReport, onOpenLegal, onOpenSettings, onStartDemo, userName, role, privacyMode, setPrivacyMode, showToast }: { children: React.ReactNode; title: string; subtitle?: string; onExportReport?: () => void; onOpenLegal: (t: "terms" | "privacy" | "dmca" | "refund") => void; onOpenSettings: () => void; onStartDemo: () => void; userName?: string; role?: string; privacyMode: boolean; setPrivacyMode: (v: boolean) => void; showToast: (m: string, t?: any) => void }) {
+function AppShell({ children, title, subtitle, onExportReport, onOpenLegal, onOpenSettings, onStartDemo, userName, role, privacyMode, setPrivacyMode, showToast, showFooter = true }: { children: React.ReactNode; title: string; subtitle?: string; onExportReport?: () => void; onOpenLegal: (t: "terms" | "privacy" | "dmca" | "refund") => void; onOpenSettings: () => void; onStartDemo: () => void; userName?: string; role?: string; privacyMode: boolean; setPrivacyMode: (v: boolean) => void; showToast: (m: string, t?: any) => void; showFooter?: boolean }) {
   return (
     <div style={{ minHeight: "100vh", background: COLORS.bg, color: COLORS.textPrimary }}>
       <TopBar title={title} subtitle={subtitle} onExportReport={onExportReport} onOpenSettings={onOpenSettings} onStartDemo={onStartDemo} userName={userName} role={role} privacyMode={privacyMode} setPrivacyMode={setPrivacyMode} showToast={showToast} />
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "20px 20px 32px", minHeight: "calc(100vh - 160px)" }}>{children}</div>
-      <Footer onOpenLegal={onOpenLegal} />
+      {showFooter && <Footer onOpenLegal={onOpenLegal} />}
       <CookieBanner />
     </div>
   );
