@@ -309,10 +309,10 @@ export default function EducatorOutreachPortal({ session }: { session: any }) {
             <div style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.5 }}>
               {demoStep === 1 && "Scenario A: Risk Identification. Notice the 'High Absence' alerts on your Dashboard."}
               {demoStep === 2 && "Searching for high-risk students in the Roster. Erica Maria is flagged for POP-Risk (60+ days)."}
-              {demoStep === 3 && "Opening Erica's profile. Review her class context, active worker flag, and AI risk timeline."}
-              {demoStep === 4 && "Scenario B: Automation. Using the AI Smart Importer to bring in new attendance records."}
-              {demoStep === 5 && "Reviewing AI parsing. Languages are auto-detected and records are ready for the queue."}
-              {demoStep === 6 && "Mass Outreach Preview. AI generates translated messages for all selected languages instantly."}
+              {demoStep === 3 && "Opening Erica's profile. Review her class context, active worker, and risk assessment."}
+              {demoStep === 4 && "Scenario B: Bulk Import. Paste raw roster data to import new student records."}
+              {demoStep === 5 && "Reviewing parsed results. Languages are auto-detected and records are ready to import."}
+              {demoStep === 6 && "Mass Outreach Preview. Messages are auto-translated for each student's language."}
               {demoStep === 7 && "Compliance & Logs. Every action is tracked in the Audit Log for state-level reporting."}
             </div>
           </div>
@@ -361,7 +361,7 @@ export default function EducatorOutreachPortal({ session }: { session: any }) {
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           {tab === "Roster" && <>
             <HoverableButton style={btn({ variant: "outline" })} onClick={() => setAddStudentOpen(true)}>Add Student</HoverableButton>
-            {isAdmin && <HoverableButton style={btn({ variant: "outline" })} onClick={() => setImportOpen(true)}>Smart Import</HoverableButton>}
+            {isAdmin && <HoverableButton style={btn({ variant: "outline" })} onClick={() => setImportOpen(true)}>Import</HoverableButton>}
             <HoverableButton style={btn({ variant: "primary" })} onClick={openBulk}>Send Bulk</HoverableButton>
           </>}
           {tab === "Outreach" && (
@@ -459,7 +459,7 @@ export default function EducatorOutreachPortal({ session }: { session: any }) {
             setBody(t.body);
             setTone(t.tone);
           }}
-          onSendTest={() => showToast(`Test message drafted for ${session?.user?.email || "your inbox"} — configure Resend in AI Settings to send for real.`, "info")}
+          onSendTest={() => showToast(`Test message drafted for ${session?.user?.email || "your inbox"} — configure Resend in Settings to send for real.`, "info")}
         /> : null}
       {tab === "Calendar" ? <CalendarView students={students} onOpenStudent={id => setActiveStudentId(id)} /> : null}
       {tab === "Reports" ? <ReportsView students={students} auditLog={auditLog} onFilterStatus={s => { setStatusFilter(s); setTab("Roster"); }} privacyMode={privacyMode} maskPII={maskPII} isAdmin={isAdmin} onExportPDF={exportPDFReport} onExportCSV={exportReport} /> : null}
@@ -566,7 +566,7 @@ export default function EducatorOutreachPortal({ session }: { session: any }) {
         )}
       </Modal>
 
-      <Modal open={importOpen} title="Smart Importer" onClose={() => { setImportOpen(false); setPasteText(""); setParsedPreview(null); setParseError(""); }} footer={
+      <Modal open={importOpen} title="Import Students" onClose={() => { setImportOpen(false); setPasteText(""); setParsedPreview(null); setParseError(""); }} footer={
         parsedPreview ? (
           <>
             <HoverableButton style={btn({ variant: "outline" })} onClick={() => { setParsedPreview(null); setPasteText(""); }}>← Back</HoverableButton>
@@ -590,7 +590,7 @@ export default function EducatorOutreachPortal({ session }: { session: any }) {
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span style={{ fontSize: 20 }}>✅</span>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 14, color: COLORS.textPrimary }}>AI parsed {parsedPreview.length} student{parsedPreview.length !== 1 ? "s" : ""} successfully</div>
+                <div style={{ fontWeight: 700, fontSize: 14, color: COLORS.textPrimary }}>{parsedPreview.length} student{parsedPreview.length !== 1 ? "s" : ""} ready to import</div>
                 <Muted>Review below — you can adjust languages before importing.</Muted>
               </div>
             </div>
@@ -648,7 +648,7 @@ export default function EducatorOutreachPortal({ session }: { session: any }) {
             {importTab === "paste" ? (
               <div style={{ display: "grid", gap: 10 }}>
                 <div style={{ background: "rgba(8,145,178,0.06)", border: `1px solid rgba(8,145,178,0.18)`, borderRadius: RADII.md, padding: "10px 14px", fontSize: 12, color: COLORS.textSecondary, lineHeight: 1.6 }}>
-                  <strong style={{ color: COLORS.teal }}>How to use:</strong> Open your Excel or Google Sheets roster → Select all cells (Ctrl+A / Cmd+A) → Copy (Ctrl+C / Cmd+C) → Paste below. The AI will auto-detect columns like Name, Email, Phone, Language, and Status.
+                  <strong style={{ color: COLORS.teal }}>How to use:</strong> Open your Excel or Google Sheets roster → Select all cells (Ctrl+A / Cmd+A) → Copy (Ctrl+C / Cmd+C) → Paste below. Columns like Name, Email, Phone, Language, and Status are detected automatically.
                 </div>
                 <textarea
                   value={pasteText}
@@ -666,7 +666,7 @@ export default function EducatorOutreachPortal({ session }: { session: any }) {
                     <div style={{ width: 6, height: 6, borderRadius: 999, background: COLORS.teal, animation: "pulse 1s ease-in-out infinite" }} />
                     <div style={{ width: 6, height: 6, borderRadius: 999, background: COLORS.teal, animation: "pulse 1s ease-in-out 0.2s infinite" }} />
                     <div style={{ width: 6, height: 6, borderRadius: 999, background: COLORS.teal, animation: "pulse 1s ease-in-out 0.4s infinite" }} />
-                    <span style={{ marginLeft: 4 }}>AI is analyzing your data…</span>
+                    <span style={{ marginLeft: 4, fontSize: 11, color: "var(--text-muted)", fontStyle: "italic" }}>Analyzing…</span>
                   </div>
                 )}
               </div>
@@ -676,7 +676,7 @@ export default function EducatorOutreachPortal({ session }: { session: any }) {
                 <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls" />
                 <Card title="What happens on import">
                   <ul style={{ margin: 0, paddingLeft: 16, color: COLORS.textSecondary, lineHeight: 1.65, fontSize: 13 }}>
-                    <li>Auto-detect primary language from name patterns</li>
+                    <li>Detect primary language from name patterns</li>
                     <li>Flag missing contact info</li>
                     <li>Recommend SMS outreach when email is missing</li>
                   </ul>
@@ -697,7 +697,7 @@ export default function EducatorOutreachPortal({ session }: { session: any }) {
               <div>
                 <label style={labelStyle()}>Gemini API Key</label>
                 <input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="AIzaSy..." style={inputStyle()} />
-                <Muted style={{ display: "block", marginTop: 4 }}>Powers context-aware translations and Smart Import.</Muted>
+                <Muted style={{ display: "block", marginTop: 4 }}>Powers translations and roster parsing. Optional — features fall back to basic mode if not set.</Muted>
               </div>
             </div>
           </section>

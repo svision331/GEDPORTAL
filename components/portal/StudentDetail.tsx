@@ -113,7 +113,7 @@ function StudentDetail({ student, programName, template, onClose, onSend, auditL
           {translating ? (
             <div style={{ display: "flex", gap: 10, alignItems: "center", padding: "12px 0" }}>
               <div className="spinner" />
-              <Muted style={{ fontStyle: "italic" }}>AI generating native translation…</Muted>
+              <span style={{ fontSize: 10, color: "var(--text-muted)", fontStyle: "italic" }}>Translating…</span>
             </div>
           ) : (
             <div style={{ color: COLORS.textPrimary, fontSize: 13, lineHeight: 1.6, whiteSpace: "pre-wrap", fontWeight: 500 }}>{msgNative || msgEnglish}</div>

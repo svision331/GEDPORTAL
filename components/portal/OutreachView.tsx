@@ -10,7 +10,7 @@ function TranslationCard({ lang, body, onRemove }: { lang: Language; body: strin
       <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <LanguageTag lang={lang} />
-          {loading && <span style={{ fontSize: 11, color: COLORS.textMuted, fontStyle: "italic" }}>AI Translating…</span>}
+          {loading && <span style={{ fontSize: 10, color: COLORS.textMuted, fontStyle: "italic" }}>Translating…</span>}
           {error && <span style={{ fontSize: 11, color: SEMANTIC.warning }}>⚠ Fallback to English</span>}
         </div>
         <button onClick={onRemove} style={btn({ variant: "ghost" })}>✕</button>
@@ -179,10 +179,8 @@ function OutreachView({
                 </div>
               )}
 
-              <div style={{ padding: "8px 12px", borderTop: `1px solid ${COLORS.border}`, display: "flex", gap: 8, alignItems: "flex-start" }}>
-                <Muted style={{ fontSize: 10.5, lineHeight: 1.4, display: "block" }}>
-                  <strong>AI Preview:</strong> Validate all translations for accuracy before sending.
-                </Muted>
+              <div style={{ padding: "6px 12px", borderTop: `1px solid ${COLORS.border}` }}>
+                <span style={{ fontSize: 9.5, color: COLORS.textMuted, lineHeight: 1.4, display: "block" }}>Translations are machine-generated. Verify before sending.</span>
               </div>
             </div>
           </div>

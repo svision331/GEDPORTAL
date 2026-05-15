@@ -188,7 +188,7 @@ By accessing or using Soulvision LLC (“Service”), you agree to these Terms. 
 
 ## 2. Description of Service
 
-GED Portal provides AI-powered educator outreach tools for student reconnection and attendance tracking. Outputs are generated automatically using artificial intelligence systems.
+GED Portal provides automated educator outreach tools for student reconnection and attendance tracking. Outputs are generated automatically using artificial intelligence systems.
 
 ## 3. Eligibility
 

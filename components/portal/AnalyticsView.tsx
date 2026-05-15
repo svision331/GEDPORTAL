@@ -129,9 +129,9 @@ function AnalyticsView({ students, onFilterStatus, privacyMode, maskPII }: { stu
         </Card>
       </div>
 
-      <Card title="AI Predictive Risk Assessment" right={loadingRisk ? <Chip label="Analyzing..." /> : <Chip label="Intelligence Active" color={COLORS.teal} />}>
+      <Card title="Risk Assessment" right={loadingRisk ? <span style={{ fontSize: 10, color: COLORS.textMuted, fontStyle: "italic" }}>Analyzing…</span> : null}>
         <div style={{ display: "grid", gap: 12 }}>
-          <Muted>AI-driven identification of students at high risk of disengagement based on contact patterns and data completeness.</Muted>
+          <span style={{ fontSize: 10, color: COLORS.textMuted, display: "block", marginBottom: 8 }}>Based on contact history and data completeness. Results are suggestions only.</span>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12 }}>
             {riskData.slice(0, 6).map(risk => {
               const student = students.find(s => s.id === risk.studentId);
