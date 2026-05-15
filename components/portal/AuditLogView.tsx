@@ -7,6 +7,7 @@ function AuditLogView({ auditLog, privacyMode, maskPII }: { auditLog: AuditEntry
   const [filter, setFilter] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [simulating, setSimulating] = useState(false);
   const [simSuccess, setSimSuccess] = useState(false);
 
   async function simulateSMS() {

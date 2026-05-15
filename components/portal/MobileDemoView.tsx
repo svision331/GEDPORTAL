@@ -69,7 +69,7 @@ function MobileDemoView({ students, onTabChange, onOpenStudent, privacyMode, mas
           <MobileNavIcon icon="📊" label="Dashboard" active={true} onClick={() => onTabChange("Dashboard")} />
           <MobileNavIcon icon="📋" label="Roster" onClick={() => onTabChange("Roster")} />
           <MobileNavIcon icon="✉️" label="Outreach" onClick={() => onTabChange("Outreach")} />
-          <MobileNavIcon icon="⚖️" label="Audit" onClick={() => onTabChange("Audit")} />
+          <MobileNavIcon icon="📈" label="Reports" onClick={() => onTabChange("Reports")} />
         </div>
       </div>
     </div>
