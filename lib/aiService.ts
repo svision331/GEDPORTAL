@@ -10,7 +10,7 @@ export async function translateText(text: string, langName: string, langCode: st
       const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
       const prompt = `You are a professional educational translator. Translate the following English message to ${langName}. Preserve the exact tone (whether encouraging, urgent, or neutral). DO NOT translate or modify the smart tags {Student_Name} and {Program_Name}, leave them exactly as is. Output ONLY the translated text, with no markdown formatting or extra commentary.\n\nMessage:\n${text}`;
       
-      const res = await fetch(url, {
+      const res = await fetchWithTimeout(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
@@ -21,7 +21,7 @@ export async function translateText(text: string, langName: string, langCode: st
     } else {
       // Fallback
       const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|${langCode}`;
-      const res = await fetch(url);
+      const res = await fetchWithTimeout(url, { method: "GET" }, 5000);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       return data.responseData?.translatedText ?? text;
@@ -29,6 +29,19 @@ export async function translateText(text: string, langName: string, langCode: st
   } catch (e) {
     console.error("Translation error:", e);
     return text; // graceful fallback to English
+  }
+}
+
+async function fetchWithTimeout(url: string, options: RequestInit, timeout = 8000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    clearTimeout(id);
+    return response;
+  } catch (error) {
+    clearTimeout(id);
+    throw error;
   }
 }
 

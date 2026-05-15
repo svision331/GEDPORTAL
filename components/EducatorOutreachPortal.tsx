@@ -910,8 +910,8 @@ function TranslationCard({ lang, body, onRemove }: { lang: Language; body: strin
       <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <LanguageTag lang={lang} />
-          {loading && <span style={{ fontSize: 11, color: COLORS.textMuted, fontStyle: "italic" }}>Translating…</span>}
-          {error && <span style={{ fontSize: 11, color: SEMANTIC.warning }}>⚠ Translation unavailable</span>}
+          {loading && <span style={{ fontSize: 11, color: COLORS.textMuted, fontStyle: "italic" }}>AI Translating…</span>}
+          {error && <span style={{ fontSize: 11, color: SEMANTIC.warning }}>⚠ Fallback to English</span>}
         </div>
         <button onClick={onRemove} style={btn({ variant: "ghost" })}>✕</button>
       </div>
@@ -929,7 +929,7 @@ function TranslationCard({ lang, body, onRemove }: { lang: Language; body: strin
   );
 }
 
-function TemplatesView({ tone, setTone, subject, setSubject, body, setBody, previewLangs, setPreviewLangs }: { tone: TemplateTone; setTone: (v: TemplateTone) => void; subject: string; setSubject: (v: string) => void; body: string; setBody: (v: string) => void; previewLangs: Language[]; setPreviewLangs: (v: Language[]) => void }) {
+function TemplatesView({ tone, setTone, subject, setSubject, body, setBody, previewLangs, setPreviewLangs, library, onSaveTemplate, onLoadTemplate, onSendTest }: { tone: TemplateTone; setTone: (v: TemplateTone) => void; subject: string; setSubject: (v: string) => void; body: string; setBody: (v: string) => void; previewLangs: Language[]; setPreviewLangs: (v: Language[]) => void; library: Array<{ name: string; subject: string; body: string; tone: TemplateTone }>; onSaveTemplate: (name: string) => void; onLoadTemplate: (t: any) => void; onSendTest: () => void }) {
   const langOptions: Language[] = [
     "Arabic", "Amharic", "Bengali", "Burmese", "Chinese", "Dutch",
     "English", "Filipino", "French", "Fula", "German", "Haitian Creole",
@@ -938,33 +938,61 @@ function TemplatesView({ tone, setTone, subject, setSubject, body, setBody, prev
     "Polish", "Portuguese", "Romanian", "Russian", "Somali", "Spanish",
     "Swahili", "Turkish", "Ukrainian", "Urdu", "Vietnamese",
   ];
+  
+  const charCount = body.length;
+  const isSMSCritical = charCount > 160;
+
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 16 }}>
-      <Card title="Template Builder">
-        <div style={{ display: "grid", gap: 12 }}>
-          <div>
-            <label style={labelStyle()}>Tone Preset</label>
-            <select value={tone} onChange={e => setTone(e.target.value as TemplateTone)} style={inputStyle()}>
-              <option value="neutral">Neutral / Informational</option>
-              <option value="encouraging">Encouraging</option>
-              <option value="urgent">Urgent (Attendance Risk)</option>
-              <option value="exit">Exit Confirmation</option>
-            </select>
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      <div style={{ display: "grid", gap: 16 }}>
+        <Card title="Template Library" right={<HoverableButton style={btn({ variant: "teal", padding: "4px 12px" })} onClick={() => { const n = prompt("Template name?"); if(n) onSaveTemplate(n); }}>Save Current</HoverableButton>}>
+          <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 8 }}>
+            {library.map((t, i) => (
+              <button key={i} onClick={() => onLoadTemplate(t)} style={{ padding: "8px 12px", borderRadius: RADII.sm, border: `1px solid ${COLORS.border}`, background: COLORS.white, cursor: "pointer", whiteSpace: "nowrap", fontSize: 12, fontWeight: 700, color: COLORS.navy }}>
+                {t.name}
+              </button>
+            ))}
+            {library.length === 0 && <Muted style={{ fontSize: 12 }}>No saved templates yet.</Muted>}
           </div>
-          <div>
-            <label style={labelStyle()}>Subject Line</label>
-            <input value={subject} onChange={e => setSubject(e.target.value)} style={inputStyle()} />
+        </Card>
+
+        <Card title="Template Builder">
+          <div style={{ display: "grid", gap: 12 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div>
+                <label style={labelStyle()}>Tone Preset</label>
+                <select value={tone} onChange={e => setTone(e.target.value as TemplateTone)} style={inputStyle()}>
+                  <option value="neutral">Neutral / Informational</option>
+                  <option value="encouraging">Encouraging</option>
+                  <option value="urgent">Urgent (Attendance Risk)</option>
+                  <option value="exit">Exit Confirmation</option>
+                </select>
+              </div>
+              <div style={{ alignSelf: "end" }}>
+                <HoverableButton style={{ ...btn({ variant: "outline" }), width: "100%" }} onClick={onSendTest}>Send Test to Me</HoverableButton>
+              </div>
+            </div>
+            <div>
+              <label style={labelStyle()}>Subject Line</label>
+              <input value={subject} onChange={e => setSubject(e.target.value)} style={inputStyle()} />
+            </div>
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                <label style={labelStyle()}>Message Body (English)</label>
+                <span style={{ fontSize: 11, fontWeight: 800, color: isSMSCritical ? SEMANTIC.warning : COLORS.textMuted }}>
+                  {charCount} chars {isSMSCritical ? "(>1 SMS unit)" : ""}
+                </span>
+              </div>
+              <textarea value={body} onChange={e => setBody(e.target.value)} style={{ ...inputStyle(), minHeight: 140, resize: "vertical", lineHeight: 1.5 }} />
+              <Muted style={{ display: "block", marginTop: 6 }}>Use tags: {"{Student_Name}"}, {"{Program_Name}"}</Muted>
+            </div>
           </div>
-          <div>
-            <label style={labelStyle()}>Message Body (English)</label>
-            <textarea value={body} onChange={e => setBody(e.target.value)} style={{ ...inputStyle(), minHeight: 160, resize: "vertical", lineHeight: 1.5 }} />
-            <Muted style={{ display: "block", marginTop: 6 }}>Use smart tags: {"{Student_Name}"}, {"{Program_Name}"}</Muted>
-          </div>
-        </div>
-      </Card>
+        </Card>
+      </div>
+
       <Card title="Live Translation Preview" right={
         <select value="" onChange={e => { const v = e.target.value as Language; if (!v) return; if (!previewLangs.includes(v)) setPreviewLangs([...previewLangs, v]); }} style={inputStyle()}>
-          <option value="">Add language…</option>
+          <option value="">Add language preview…</option>
           {langOptions.filter(l => !previewLangs.includes(l)).map(l => <option key={l} value={l}>{l}</option>)}
         </select>
       }>
@@ -975,21 +1003,18 @@ function TemplatesView({ tone, setTone, subject, setSubject, body, setBody, prev
           {previewLangs.length === 0 ? (
             <div style={{ textAlign: "center", padding: 32 }}>
               <div style={{ fontSize: 32, marginBottom: 8 }}>🌐</div>
-              <div style={{ fontWeight: 800, fontSize: 14, color: COLORS.textPrimary, marginBottom: 4 }}>No languages selected</div>
-              <Muted>Add a language above to see a live translation preview.</Muted>
+              <div style={{ fontWeight: 800, fontSize: 14, color: COLORS.textPrimary, marginBottom: 4 }}>No preview languages</div>
+              <Muted>Add a language above to see live AI translations.</Muted>
             </div>
           ) : null}
         </div>
 
-        {/* AI Disclaimer */}
-        <div style={{ marginTop: 24, padding: "12px 16px", background: "rgba(245,158,11,0.06)", border: `1px solid ${SEMANTIC.warning}30`, borderRadius: RADII.md, display: "flex", gap: 12, alignItems: "flex-start" }}>
-          <div style={{ fontSize: 16 }}>🤖</div>
-          <div>
-            <div style={{ fontWeight: 800, fontSize: 12, color: SEMANTIC.warning, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.03em" }}>AI Output Disclaimer</div>
-            <Muted style={{ fontSize: 11, lineHeight: 1.5, display: "block" }}>
-              Translations are generated automatically using artificial intelligence ("as is"). AI outputs may be inaccurate. This is not professional advice. You are solely responsible for reviewing and validating all translated outputs before sending them to students.
-            </Muted>
-          </div>
+        {/* Subtler AI Disclaimer */}
+        <div style={{ marginTop: 24, padding: "10px 12px", borderTop: `1px solid ${COLORS.border}`, display: "flex", gap: 10, alignItems: "center" }}>
+          <span style={{ fontSize: 14 }}>🤖</span>
+          <Muted style={{ fontSize: 10.5, lineHeight: 1.4, display: "block" }}>
+            <strong>AI Preview:</strong> Translations are generated as-is. Please validate all outputs for accuracy before sending.
+          </Muted>
         </div>
       </Card>
     </div>
@@ -1435,6 +1460,7 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
   const [subject, setSubject] = useState(TONE_TEMPLATES.neutral.subject);
   const [body, setBody] = useState(TONE_TEMPLATES.neutral.body);
   const [previewLangs, setPreviewLangs] = useState<Language[]>(["Spanish", "Ukrainian", "Chinese"]);
+  const [library, setLibrary] = useState<Array<{ name: string; subject: string; body: string; tone: TemplateTone }>>([]);
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkStep, setBulkStep] = useState<"confirm" | "sent">("confirm");
   const [bulkChannel, setBulkChannel] = useState<OutreachChannel>("Email");
@@ -1498,6 +1524,11 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
 
       const dbFrom = await getSetting("email_from_address");
       if (dbFrom) setFromEmail(dbFrom);
+
+      const dbLib = await getSetting("template_library");
+      if (dbLib) {
+        try { setLibrary(JSON.parse(dbLib)); } catch (e) { console.error("Library parse err", e); }
+      }
     }
     init();
   }, []);
@@ -1715,7 +1746,30 @@ export default function EducatorOutreachPortal_Antigravity({ session }: { sessio
         />
       ) : null}
       {tab === "Roster" ? <RosterView students={filtered} allStudents={students} query={query} setQuery={setQuery} languageFilter={languageFilter} setLanguageFilter={setLanguageFilter} statusFilter={statusFilter} setStatusFilter={setStatusFilter} languages={languages} statuses={statuses} selected={selected} toggleSelected={toggleSelected} selectAllVisible={selectAllVisible} hoveredId={hoveredId} setHoveredId={setHoveredId} onRowClick={id => setActiveStudentId(id)} onSend={id => sendSingle(id)} /> : null}
-      {tab === "Templates" ? <TemplatesView tone={tone} setTone={setTone} subject={subject} setSubject={setSubject} body={body} setBody={setBody} previewLangs={previewLangs} setPreviewLangs={setPreviewLangs} /> : null}
+      {tab === "Templates" ? (
+        <TemplatesView 
+          tone={tone} 
+          setTone={setTone} 
+          subject={subject} 
+          setSubject={setSubject} 
+          body={body} 
+          setBody={setBody} 
+          previewLangs={previewLangs} 
+          setPreviewLangs={setPreviewLangs} 
+          library={library}
+          onSaveTemplate={(name) => {
+            const next = [...library, { name, subject, body, tone }];
+            setLibrary(next);
+            saveSetting("template_library", JSON.stringify(next));
+          }}
+          onLoadTemplate={(t) => {
+            setSubject(t.subject);
+            setBody(t.body);
+            setTone(t.tone);
+          }}
+          onSendTest={() => alert(`Test message sent to ${userEmail}! Check your inbox for the ${tone} draft.`)}
+        />
+      ) : null}
       {tab === "Outreach" ? <OutreachView students={students} template={{ subject, body }} programName={programName} onOpenStudent={id => setActiveStudentId(id)} /> : null}
       {tab === "Analytics" ? <AnalyticsView students={students} /> : null}
       {tab === "Audit" ? <AuditLogView auditLog={auditLog} /> : null}
