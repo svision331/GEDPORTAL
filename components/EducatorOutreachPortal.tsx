@@ -637,25 +637,33 @@ function tdStyle(): React.CSSProperties {
 }
 
 const METRIC_ACCENTS = [COLORS.teal, SEMANTIC.warning, SEMANTIC.danger, "#7C3AED"];
-function Metric({ title, value, sub, idx = 0 }: { title: string; value: number; sub?: string; idx?: number }) {
-  const accent = METRIC_ACCENTS[idx % METRIC_ACCENTS.length];
+function Metric({ title, value, sub, tone = "neutral" }: { title: string; value: number; sub?: string; tone?: "success" | "warning" | "danger" | "info" | "neutral" }) {
+  const color = tone === "success" ? SEMANTIC.success : tone === "warning" ? SEMANTIC.warning : tone === "danger" ? SEMANTIC.danger : tone === "info" ? SEMANTIC.info : COLORS.navy;
+  const bg = tone === "success" ? "rgba(34, 197, 94, 0.05)" : tone === "warning" ? "rgba(245, 158, 11, 0.05)" : tone === "danger" ? "rgba(239, 68, 68, 0.05)" : tone === "info" ? "rgba(59, 130, 246, 0.05)" : COLORS.white;
+  
   return (
-    <div style={{ padding: "14px 16px", borderRadius: RADII.md, border: `1px solid ${COLORS.border}`, background: COLORS.white, boxShadow: SHADOWS.card, borderTop: `3px solid ${accent}` }}>
-      <div style={{ fontSize: 28, fontWeight: 800, color: accent, lineHeight: 1.1 }}><CountUp value={value} /></div>
+    <div style={{ padding: "14px 16px", borderRadius: RADII.md, border: `1px solid ${COLORS.border}`, background: bg, boxShadow: SHADOWS.card, borderTop: `3px solid ${color}` }}>
+      <div style={{ fontSize: 28, fontWeight: 800, color: color, lineHeight: 1.1 }}><CountUp value={value} /></div>
       <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.textPrimary, marginTop: 4 }}>{title}</div>
       {sub ? <Muted style={{ display: "block", marginTop: 2 }}>{sub}</Muted> : null}
     </div>
   );
 }
 
-function AlertRow({ title, detail, tone }: { title: string; detail: string; tone: "warning" | "danger" | "info" }) {
-  const color = tone === "warning" ? SEMANTIC.warning : tone === "danger" ? SEMANTIC.danger : SEMANTIC.info;
+function AlertRow({ title, detail, tone, onClick }: { title: string; detail: string; tone: "warning" | "danger" | "info" | "success"; onClick?: () => void }) {
+  const color = tone === "warning" ? SEMANTIC.warning : tone === "danger" ? SEMANTIC.danger : tone === "info" ? SEMANTIC.info : SEMANTIC.success;
   return (
-    <div style={{ padding: "12px 14px", borderRadius: RADII.md, border: `1px solid ${COLORS.border}`, borderLeft: `3px solid ${color}`, background: COLORS.white, display: "flex", gap: 12, alignItems: "flex-start", boxShadow: SHADOWS.card }}>
+    <div 
+      onClick={onClick}
+      style={{ padding: "12px 14px", borderRadius: RADII.md, border: `1px solid ${COLORS.border}`, borderLeft: `3px solid ${color}`, background: COLORS.white, display: "flex", gap: 12, alignItems: "center", boxShadow: SHADOWS.card, cursor: onClick ? "pointer" : "default", transition: "all 0.2s" }}
+      onMouseEnter={e => { if(onClick) e.currentTarget.style.transform = "translateY(-1px)"; }}
+      onMouseLeave={e => { if(onClick) e.currentTarget.style.transform = "none"; }}
+    >
       <div style={{ flex: 1 }}>
         <div style={{ fontWeight: 700, fontSize: 13, color: COLORS.textPrimary }}>{title}</div>
         <Muted style={{ display: "block", marginTop: 3 }}>{detail}</Muted>
       </div>
+      {onClick && <span style={{ color: COLORS.textMuted, fontSize: 16 }}>➔</span>}
     </div>
   );
 }
@@ -713,45 +721,52 @@ function AppShell({ children, title, subtitle, onExportReport, onOpenLegal, onOp
 }
 
 function DashboardView({ focus, onPickFocus, stats, onSendEmail, onReviewDrafts, onDownloadLog }: { focus: { atRisk: number; missingContact: number; repliesWaiting: number }; onPickFocus: (key: string) => void; stats: { total: number; atRisk: number; smsRequired: number; unreachable: number }; onSendEmail: () => void; onReviewDrafts: () => void; onDownloadLog: () => void }) {
+  const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  
   return (
     <div style={{ display: "grid", gap: 16 }}>
-      <Card title="Command Center" right={<Chip label="Last 30 days" />}>
-        <div style={{ display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: 16 }}>
-          <div>
+      <Card title="Outreach Command Center" right={<Chip label={`Data Synced: Today at ${timeString}`} />}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 24 }}>
+          {/* LEFT: Metrics and Alerts */}
+          <div style={{ display: "grid", gap: 24 }}>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
-              <Metric title="Total Students" value={stats.total} sub="Roster size" idx={0} />
-              <Metric title="At Risk" value={stats.atRisk} sub="Needs outreach" idx={1} />
-              <Metric title="SMS Required" value={stats.smsRequired} sub="No email / prefer SMS" idx={2} />
-              <Metric title="Unreachable" value={stats.unreachable} sub="Missing/invalid contact" idx={3} />
+              <Metric title="Total Students" value={stats.total} sub="Roster size" tone="neutral" />
+              <Metric title="At Risk" value={stats.atRisk} sub="Needs outreach" tone={stats.atRisk > 0 ? "danger" : "success"} />
+              <Metric title="Replies Waiting" value={focus.repliesWaiting} sub="Needs review" tone={focus.repliesWaiting > 0 ? "info" : "neutral"} />
+              <Metric title="Unreachable" value={stats.unreachable} sub="Missing contact info" tone={stats.unreachable > 0 ? "warning" : "success"} />
             </div>
-            <Divider />
-            <div style={{ fontWeight: 850, fontSize: 13, marginBottom: 8 }}>Today's Focus</div>
-            <TodaysFocus items={[{ label: "Students at 90+ days absent", count: focus.atRisk, filterKey: "atRisk" }, { label: "Missing contact info", count: focus.missingContact, filterKey: "missingContact" }, { label: "Replies waiting review", count: focus.repliesWaiting, filterKey: "replies" }]} onPick={onPickFocus} />
+            
+            <div style={{ display: "grid", gap: 10 }}>
+              <div style={{ fontWeight: 850, fontSize: 13, marginBottom: 4, display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${COLORS.border}`, paddingBottom: 8 }}>
+                <span>Active Attendance Alerts</span>
+                <Muted>Prioritized by urgency</Muted>
+              </div>
+              
+              {stats.atRisk > 0 && <AlertRow onClick={() => onPickFocus("atRisk")} title="High Absence Threshold Reached" detail={`${stats.atRisk} student(s) critically flagged. Prioritize immediate outreach.`} tone="danger" />}
+              {focus.missingContact > 0 && <AlertRow onClick={() => onPickFocus("missingContact")} title="Missing Contact Information" detail={`${focus.missingContact} student(s) unreachable. Update records manually.`} tone="warning" />}
+              {focus.repliesWaiting > 0 && <AlertRow onClick={() => onPickFocus("replies")} title="New Replies Waiting" detail={`${focus.repliesWaiting} response(s) pending your review.`} tone="info" />}
+              
+              {stats.atRisk === 0 && focus.missingContact === 0 && focus.repliesWaiting === 0 && (
+                <div style={{ padding: 24, textAlign: "center", background: "rgba(34, 197, 94, 0.05)", borderRadius: 12, border: `1px dashed rgba(34, 197, 94, 0.3)` }}>
+                  <div style={{ fontSize: 24, marginBottom: 8 }}>✅</div>
+                  <div style={{ fontWeight: 800, fontSize: 14, color: SEMANTIC.success }}>All caught up</div>
+                  <Muted>No critical attendance alerts at this time.</Muted>
+                </div>
+              )}
+            </div>
           </div>
-          <div>
-            <Card title="Action Required" style={{ background: `linear-gradient(135deg, rgba(31,58,95,0.04), rgba(8,145,178,0.06))`, border: `1px solid rgba(8,145,178,0.15)` }}>
+          
+          {/* RIGHT: Quick Actions */}
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <Card title="Quick Actions" style={{ background: `linear-gradient(135deg, rgba(31,58,95,0.02), rgba(8,145,178,0.04))`, border: `1px solid ${COLORS.borderStrong}`, height: "100%", boxShadow: "none" }}>
               <div style={{ display: "grid", gap: 10 }}>
-                <Muted>Fast actions for weekly compliance and follow-through.</Muted>
+                <Muted style={{ marginBottom: 4 }}>Fast tools for daily compliance workflows.</Muted>
                 <HoverableButton style={btn({ variant: "teal" })} onClick={onSendEmail}>Send Mass Email</HoverableButton>
                 <HoverableButton style={btn({ variant: "outline" })} onClick={onReviewDrafts}>Review Translated Drafts</HoverableButton>
                 <HoverableButton style={btn({ variant: "outline" })} onClick={onDownloadLog}>Download Supervisor Log</HoverableButton>
               </div>
             </Card>
           </div>
-        </div>
-      </Card>
-      <Card title="Attendance Alerts">
-        <div style={{ display: "grid", gap: 10 }}>
-          {stats.atRisk > 0 && <AlertRow title="3-month absence threshold reached" detail={`${stats.atRisk} student${stats.atRisk !== 1 ? 's' : ''} flagged • prioritize SMS for missing email`} tone="warning" />}
-          {focus.missingContact > 0 && <AlertRow title="Missing contact info" detail={`${focus.missingContact} student${focus.missingContact !== 1 ? 's' : ''} need phone verification • recommend SMS outreach`} tone="danger" />}
-          {focus.repliesWaiting > 0 && <AlertRow title="New replies waiting" detail={`${focus.repliesWaiting} response${focus.repliesWaiting !== 1 ? 's' : ''} received • review and update status`} tone="info" />}
-          {stats.atRisk === 0 && focus.missingContact === 0 && focus.repliesWaiting === 0 && (
-            <div style={{ padding: 20, textAlign: "center", background: "#f8fafc", borderRadius: 12, border: `1px dashed ${COLORS.borderStrong}` }}>
-              <div style={{ fontSize: 24, marginBottom: 8 }}>✅</div>
-              <div style={{ fontWeight: 800, fontSize: 14 }}>All caught up</div>
-              <Muted>No critical attendance alerts at this time.</Muted>
-            </div>
-          )}
         </div>
       </Card>
     </div>
