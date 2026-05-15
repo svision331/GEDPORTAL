@@ -1236,7 +1236,7 @@ function AnalyticsView({ students, onFilterStatus }: { students: Student[]; onFi
                 <Tooltip 
                   cursor={{ fill: 'rgba(31,58,95,0.04)' }} 
                   contentStyle={{ borderRadius: RADII.md, border: `1px solid ${COLORS.border}`, boxShadow: SHADOWS.card }}
-                  formatter={(val: number, name: string, props: any) => [`${val} (${Math.round(val/props.payload.Total * 100)}%)`, name]}
+                  formatter={(val: any, name: any, props: any) => [`${val} (${Math.round((Number(val)||0)/(Number(props.payload.Total)||1) * 100)}%)`, name]}
                 />
                 <Bar dataKey="Contacted" stackId="a" fill={COLORS.teal} radius={[0, 0, 0, 0]} />
                 <Bar dataKey="Pending" stackId="a" fill={COLORS.navyLight} radius={[0, 4, 4, 0]} />
