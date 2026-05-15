@@ -3,9 +3,8 @@ generator client {
 }
 
 datasource db {
-  // Use sqlite locally (DATABASE_URL="file:./dev.db") and postgres on Vercel
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("POSTGRES_URL_NON_POOLING") // Uses Vercel Postgres/Neon direct connection
 }
 
 model Student {
