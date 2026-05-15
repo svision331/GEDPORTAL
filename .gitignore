@@ -10,7 +10,7 @@ dist
 
 /src/generated/prisma
 .next/
-dev.db
+
 *.png
 .env*
 ! .env.example
