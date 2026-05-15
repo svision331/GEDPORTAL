@@ -945,7 +945,7 @@ function TemplatesView({ tone, setTone, subject, setSubject, body, setBody, prev
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
       <div style={{ display: "grid", gap: 16 }}>
-        <Card title="Template Library" right={<HoverableButton style={btn({ variant: "teal", padding: "4px 12px" })} onClick={() => { const n = prompt("Template name?"); if(n) onSaveTemplate(n); }}>Save Current</HoverableButton>}>
+        <Card title="Template Library" right={<HoverableButton style={{ ...btn({ variant: "teal" }), padding: "4px 12px" }} onClick={() => { const n = prompt("Template name?"); if(n) onSaveTemplate(n); }}>Save Current</HoverableButton>}>
           <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 8 }}>
             {library.map((t, i) => (
               <button key={i} onClick={() => onLoadTemplate(t)} style={{ padding: "8px 12px", borderRadius: RADII.sm, border: `1px solid ${COLORS.border}`, background: COLORS.white, cursor: "pointer", whiteSpace: "nowrap", fontSize: 12, fontWeight: 700, color: COLORS.navy }}>
