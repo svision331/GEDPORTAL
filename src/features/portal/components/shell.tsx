@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { COLORS, SEMANTIC, SHADOWS, RADII } from "./types";
+import { COLORS, SEMANTIC, SHADOWS, RADII } from "@/src/models";
 
 function Metric({ title, value, sub, tone = "neutral", trend }: { title: string; value: number; sub?: string; tone?: "success" | "warning" | "danger" | "info" | "neutral"; trend?: string }) {
   const color = tone === "success" ? SEMANTIC.success : tone === "warning" ? SEMANTIC.warning : tone === "danger" ? SEMANTIC.danger : tone === "info" ? SEMANTIC.info : COLORS.navy;

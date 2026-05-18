@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { COLORS, SEMANTIC, SHADOWS, RADII, STATUS_CONFIG, Student, Status, getStudentName } from "./types";
+import { COLORS, SEMANTIC, SHADOWS, RADII, STATUS_CONFIG, Student, Status, getStudentName } from "@/src/models";
 
 
 function AnalyticsView({ students, onFilterStatus, privacyMode, maskPII }: { students: Student[]; onFilterStatus: (s: Status) => void; privacyMode: boolean; maskPII: any }) {

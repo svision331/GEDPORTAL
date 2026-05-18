@@ -1,9 +1,7 @@
 /**
- * Entry point — re-exports types and the main portal component.
- * The implementation is split across components/portal/ for maintainability.
- *
- * External imports (app/actions.ts, lib/aiService.ts, etc.) should import
- * types directly from @/components/portal/types going forward.
+ * Backwards-compatibility shim.
+ * The portal has been restructured to src/features/portal/.
+ * This file exists only to avoid breaking any external imports.
  */
-export type { Language, Student } from "./portal/types";
-export { default } from "./portal";
+export type { Language, Student } from "@/src/models";
+export { default } from "@/src/features/portal/Portal";

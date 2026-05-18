@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { COLORS, SEMANTIC, SHADOWS, RADII, STATUS_CONFIG, LANG_COLORS, Language, Status, TemplateTone } from "./types";
+import { COLORS, SEMANTIC, SHADOWS, RADII, STATUS_CONFIG, LANG_COLORS, Language, Status, TemplateTone } from "@/src/models";
 
 function clamp(n: number, min: number, max: number) { return Math.max(min, Math.min(max, n)); }
 

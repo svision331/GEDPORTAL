@@ -1,4 +1,4 @@
-import EducatorOutreachPortal from "@/components/EducatorOutreachPortal";
+import EducatorOutreachPortal from "@/src/features/portal";
 import { auth } from "@/auth";
 
 export default async function Home() {

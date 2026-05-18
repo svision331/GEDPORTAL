@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/src/core/prisma";
 import twilio from "twilio";
 import { getSetting } from "@/app/actions";
 

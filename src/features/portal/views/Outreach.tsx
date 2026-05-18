@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { COLORS, SEMANTIC, SHADOWS, RADII, STATUS_CONFIG, LANG_COLORS, Student, AuditEntry, Language, Status, TemplateTone, getStudentName } from "./types";
+import { COLORS, SEMANTIC, SHADOWS, RADII, STATUS_CONFIG, LANG_COLORS, Student, AuditEntry, Language, Status, TemplateTone, getStudentName } from "@/src/models";
 
 function TranslationCard({ lang, body, onRemove }: { lang: Language; body: string; onRemove: () => void }) {
   const { translated, loading, error } = useTranslation(body, lang);

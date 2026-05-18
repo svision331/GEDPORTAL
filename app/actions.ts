@@ -1,15 +1,15 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/src/core/prisma";
 import { auth } from "@/auth";
-import { sendRealEmail, sendRealSMS } from "@/lib/comms";
-import { encrypt, decrypt } from "@/lib/crypto";
+import { sendRealEmail, sendRealSMS } from "@/src/core/comms";
+import { encrypt, decrypt } from "@/src/core/crypto";
 import {
   StudentCreateSchema,
   StudentUpdateSchema,
   AuditEntrySchema,
   SendOutreachSchema,
-} from "@/lib/schemas";
+} from "@/src/core/schemas";
 
 // Settings keys that contain sensitive credentials and must be encrypted at rest
 const SENSITIVE_SETTING_KEYS = new Set([

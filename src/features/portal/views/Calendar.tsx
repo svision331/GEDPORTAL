@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { COLORS, SEMANTIC, SHADOWS, RADII, STATUS_CONFIG, Student, AuditEntry, Language, Status, TemplateTone, getStudentName } from "./types";
+import { COLORS, SEMANTIC, SHADOWS, RADII, STATUS_CONFIG, Student, AuditEntry, Language, Status, TemplateTone, getStudentName } from "@/src/models";
 
 
 function CalendarView({ students, onOpenStudent }: { students: Student[]; onOpenStudent: (id: string) => void }) {

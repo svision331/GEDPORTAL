@@ -1,6 +1,6 @@
-import { translateText as translate, parseRawPasteLLM as parse, predictRisk, RiskAssessment } from "@/lib/aiService";
+import { translateText as translate, parseRawPasteLLM as parse, predictRisk, RiskAssessment } from "@/src/core/aiService";
 import { getSetting } from "./actions";
-import { Student } from "@/components/portal/types";
+import { Student } from "@/src/models";
 
 export async function translateViaAI(text: string, langName: string, langCode: string) {
   const dbKey = await getSetting("ag_gemini_api_key");

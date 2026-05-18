@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { COLORS, SEMANTIC, SHADOWS, RADII, STATUS_CONFIG, Student, AuditEntry, Language, Status, TemplateTone, getStudentName } from "./types";
+import { COLORS, SEMANTIC, SHADOWS, RADII, STATUS_CONFIG, Student, AuditEntry, Language, Status, TemplateTone, getStudentName } from "@/src/models";
 
 
 function MobileDemoView({ students, onTabChange, onOpenStudent, privacyMode, maskPII }: { students: Student[]; onTabChange: (t: any) => void; onOpenStudent: (id: string) => void; privacyMode: boolean; maskPII: any }) {

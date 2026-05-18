@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { COLORS, SEMANTIC, SHADOWS, RADII, STATUS_CONFIG, Student, AuditEntry, Language, Status, TemplateTone, getStudentName } from "./types";
+import { COLORS, SEMANTIC, SHADOWS, RADII, STATUS_CONFIG, Student, AuditEntry, Language, Status, TemplateTone, getStudentName } from "@/src/models";
 
 function DashboardView({ focus, onPickFocus, stats, onSendEmail, onReviewDrafts, onDownloadLog, onHealthCheck, notificationsEnabled, students, auditLog, setTab, setStatusFilter }: { focus: { atRisk: number; missingContact: number; repliesWaiting: number }; onPickFocus: (key: string) => void; stats: { total: number; atRisk: number; smsRequired: number; unreachable: number }; onSendEmail: () => void; onReviewDrafts: () => void; onDownloadLog: () => void; onHealthCheck: () => void; notificationsEnabled: boolean; students: Student[]; auditLog: AuditEntry[]; setTab: (t: any) => void; setStatusFilter: (f: any) => void }) {
   const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
